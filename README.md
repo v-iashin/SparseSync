@@ -1,6 +1,12 @@
 # Sparse in Space and Time: Audio-visual Synchronisation with Trainable Selectors.
 
-BMVC, 2022
+British Machine Vision Conference (BMVC), 2022
+
+• [[Project Page](https://v-iashin.github.io/SparseSync)] •
+<!-- • [[ArXiv](http://arxiv.org/abs/2110.08791)] -->
+<!-- • [[BMVC Proceedings](https://www.bmvc2021-virtualconference.com/conference/papers/paper_1213.html)] -->
+<!-- • [[Poster (for PAISS)](https://v-iashin.github.io/images/specvqgan/poster.pdf)] -->
+<!-- • [[Presentation on YouTube](https://www.youtube.com/watch?v=Bucb3nAa398)] ([Can't watch YouTube?](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/specvqgan_public/SpecVQGAN%20YouTube.mp4)) -->
 
 <img src="https://github.com/v-iashin/SparseSync/raw/main/_repo_assets/sparse_selector_teaser.png" alt="SparseSync Teaser (comparing viddeos with dense and sparse signals)" width="900">
 
@@ -16,7 +22,7 @@ Such videos have a dense synchronisation signal due to the strong correlation be
 To handle the synchronisation of sparse signals in time a model should be able to process longer video clips
 and have enough capacity to handle the diversity of scenes.
 To this end, we propose _SparseSelector_, a transformer-based architecture that enables the processing
-of long videos in sub-linear complexity with respect to the number of input tokens which grows
+of long videos in linear complexity with respect to the number of input tokens which grows
 rapidly with sampling rate, resolution, and video duration.
 
 - [Sparse in Space and Time: Audio-visual Synchronisation with Trainable Selectors.](#sparse-in-space-and-time-audio-visual-synchronisation-with-trainable-selectors)
@@ -143,12 +149,19 @@ It is also safe to parallelize for multiple threads and, perhaps, a cluster.
 
 ## Pre-trained Model Checkpoints
 
-You can download the pre-trained weights for the SparseSync:
+When you run an [example](#examples),
+the checkpoints and configs for `SparseSync` will be downloaded automatically.
+Alternatively, you can download the pre-trained weights manually:
 
-* LRS3 ('No Face Crop') weights:
-[22-07-13T22-25-49.zip (572 MB)](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-13T22-25-49.zip)
-* VGGSound-Sparse weights, pre-trained on LRS ('No Face Crop'):
-[22-07-28T15-49-45.zip (572 MB)](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-28T15-49-45.zip)
+* Pre-trained on LRS3 ('No Face Crop'):
+[[config]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-13T22-25-49/cfg-22-07-13T22-25-49.yaml)
+[[ckpt]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-13T22-25-49/22-07-13T22-25-49.pt) (623 MB, md5: `63f883e...`)
+* Fine-tuned on VGGSound-Sparse, pre-trained on LRS ('No Face Crop'):
+[[config]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-28T15-49-45/cfg-22-07-28T15-49-45.yaml)
+[[ckpt]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt) (623 MB, md5: `a26f207...`)
+* Fine-tuned on VGGSound (full), pre-trained on LRS ('No Face Crop'):
+[[config]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/cfg-22-09-21T21-00-52.yaml)
+[[ckpt]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/22-09-21T21-00-52.pt) (623 MB, md5: `83fba5f...`)
 
 ```bash
 # replace "xx-xx-xxTxx-xx-xx" with the correct filename from above
@@ -286,7 +299,10 @@ We do this to get a more robust estimate (by reducing the std) of model performa
 
 ## Examples
 
-A minimal working example from the _LRS3 dataset_ (the video is in-sync):
+A minimal working example that makes a prediction for a sample video.
+The script will download all necessary checkpoints and configs automatically
+
+A sample from the _LRS3 dataset_ (note, the video is in-sync):
 ```bash
 # conda activate sparse_sync
 python ./scripts/example.py \

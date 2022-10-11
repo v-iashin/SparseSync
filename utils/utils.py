@@ -8,22 +8,32 @@ import requests
 from omegaconf import OmegaConf
 from tqdm import tqdm
 
+PARENT_LINK = 'https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a'
+FNAME2LINK = {
+    # feature extractors
+    'ResNetAudio-22-08-04T09-51-04.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-08-04T09-51-04.pt',  # 2s
+    'ResNetAudio-22-08-03T23-14-49.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-08-03T23-14-49.pt',  # 3s
+    'ResNetAudio-22-08-03T23-14-28.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-08-03T23-14-28.pt',  # 4s
+    'ResNetAudio-22-06-24T08-10-33.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-06-24T08-10-33.pt',  # 5s
+    'ResNetAudio-22-06-24T17-31-07.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-06-24T17-31-07.pt',  # 6s
+    'ResNetAudio-22-06-24T23-57-11.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-06-24T23-57-11.pt',  # 7s
+    'ResNetAudio-22-06-25T04-35-42.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-06-25T04-35-42.pt',  # 8s
+    # ft VGGSound-Full
+    '22-09-21T21-00-52.pt': f'{PARENT_LINK}/sync/sync_models/22-09-21T21-00-52/22-09-21T21-00-52.pt',
+    'cfg-22-09-21T21-00-52.yaml': f'{PARENT_LINK}/sync/sync_models/22-09-21T21-00-52/cfg-22-09-21T21-00-52.yaml',
+    # ft VGGSound-Sparse
+    '22-07-28T15-49-45.pt': f'{PARENT_LINK}/sync/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt',
+    'cfg-22-07-28T15-49-45.yaml': f'{PARENT_LINK}/sync/sync_models/22-07-28T15-49-45/cfg-22-07-28T15-49-45.yaml',
+    # only pt on LRS3
+    '22-07-13T22-25-49.pt': f'{PARENT_LINK}/sync/sync_models/22-07-13T22-25-49/22-07-13T22-25-49.pt',
+    'cfg-22-07-13T22-25-49.yaml': f'{PARENT_LINK}/sync/sync_models/22-07-13T22-25-49/cfg-22-07-13T22-25-49.yaml',
+}
 
 def check_if_file_exists_else_download(path, chunk_size=1024):
-    parent_link = 'https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a'
-    fname2link = {
-        'ResNetAudio-22-08-04T09-51-04': f'{parent_link}/sync/ResNetAudio-22-08-04T09-51-04.pt',  # 2s
-        'ResNetAudio-22-08-03T23-14-49': f'{parent_link}/sync/ResNetAudio-22-08-03T23-14-49.pt',  # 3s
-        'ResNetAudio-22-08-03T23-14-28': f'{parent_link}/sync/ResNetAudio-22-08-03T23-14-28.pt',  # 4s
-        'ResNetAudio-22-06-24T08-10-33': f'{parent_link}/sync/ResNetAudio-22-06-24T08-10-33.pt',  # 5s
-        'ResNetAudio-22-06-24T17-31-07': f'{parent_link}/sync/ResNetAudio-22-06-24T17-31-07.pt',  # 6s
-        'ResNetAudio-22-06-24T23-57-11': f'{parent_link}/sync/ResNetAudio-22-06-24T23-57-11.pt',  # 7s
-        'ResNetAudio-22-06-25T04-35-42': f'{parent_link}/sync/ResNetAudio-22-06-25T04-35-42.pt',  # 8s
-    }
     path = Path(path)
     if not path.exists():
         path.parent.mkdir(exist_ok=True, parents=True)
-        with requests.get(fname2link[path.stem], stream=True) as r:
+        with requests.get(FNAME2LINK[path.name], stream=True) as r:
             total_size = int(r.headers.get('content-length', 0))
             with tqdm(total=total_size, unit='B', unit_scale=True) as pbar:
                 with open(path, 'wb') as f:

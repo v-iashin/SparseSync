@@ -13,7 +13,7 @@ from dataset.dataset_utils import get_video_and_audio
 from dataset.transforms import make_class_grid, quantize_offset
 from model.modules.attn_recorder import Recorder
 from model.modules.feature_selector import CrossAttention
-from utils.utils import which_ffmpeg
+from utils.utils import check_if_file_exists_else_download, which_ffmpeg
 
 from scripts.train_utils import get_model, get_transforms, prepare_inputs
 
@@ -91,12 +91,18 @@ def reconstruct_video_from_input(aud, vid, meta, orig_vid_path, v_start_i_sec, o
 
 
 def main(args):
-    print(f'Using video: {args.vid_path}')
-    # load config
     cfg_path = f'./logs/sync_models/{args.exp_name}/cfg-{args.exp_name}.yaml'
+    ckpt_path = f'./logs/sync_models/{args.exp_name}/{args.exp_name}.pt'
+
+    # if the model does not exist try to download it from the server
+    check_if_file_exists_else_download(cfg_path)
+    check_if_file_exists_else_download(ckpt_path)
+
+    # load config
     cfg = OmegaConf.load(cfg_path)
 
     # checking if the provided video has the correct frame rates
+    print(f'Using video: {args.vid_path}')
     _, _, vid_meta = torchvision.io.read_video(args.vid_path)
     if vid_meta['video_fps'] != args.vfps or vid_meta['audio_fps'] != args.afps:
         print(f'Reencoding. vfps: {vid_meta["video_fps"]} -> {args.vfps}; afps: {vid_meta["audio_fps"]} -> {args.afps}')
@@ -107,7 +113,6 @@ def main(args):
     device = torch.device(args.device)
 
     # load the model
-    ckpt_path = f'./logs/sync_models/{args.exp_name}/{args.exp_name}.pt'
     _, model = get_model(cfg, device)
     ckpt = torch.load(ckpt_path, map_location=torch.device('cpu'))
     model.load_state_dict(ckpt['model'])
