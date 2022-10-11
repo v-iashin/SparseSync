@@ -8,6 +8,8 @@ British Machine Vision Conference (BMVC), 2022
 <!-- • [[Poster (for PAISS)](https://v-iashin.github.io/images/specvqgan/poster.pdf)] -->
 <!-- • [[Presentation on YouTube](https://www.youtube.com/watch?v=Bucb3nAa398)] ([Can't watch YouTube?](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/specvqgan_public/SpecVQGAN%20YouTube.mp4)) -->
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rawAPksDHUioSXcAbQTn_kMbDl3nYg8q?usp=sharing)
+
 <img src="https://github.com/v-iashin/SparseSync/raw/main/_repo_assets/sparse_selector_teaser.png" alt="SparseSync Teaser (comparing viddeos with dense and sparse signals)" width="900">
 
 Audio-visual synchronisation is the task of determining the temporal offset between the audio and visual
@@ -300,7 +302,10 @@ We do this to get a more robust estimate (by reducing the std) of model performa
 ## Examples
 
 A minimal working example that makes a prediction for a sample video.
-The script will download all necessary checkpoints and configs automatically
+The script will download all necessary checkpoints and configs automatically.
+
+Try our Colab notebook:
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rawAPksDHUioSXcAbQTn_kMbDl3nYg8q?usp=sharing)
 
 A sample from the _LRS3 dataset_ (note, the video is in-sync):
 ```bash

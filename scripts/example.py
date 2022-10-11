@@ -20,26 +20,29 @@ from scripts.train_utils import get_model, get_transforms, prepare_inputs
 
 def reencode_video(path, vfps=10, afps=22050, input_size=256):
     assert which_ffmpeg() != '', 'Is ffmpeg installed? Check if the conda environment is activated.'
-    new_path = 'new_vid_' + Path(path).name
+    new_path = Path.cwd() / 'vis' / f'{Path(path).stem}_{vfps}fps_{input_size}side_{afps}hz.mp4'
+    new_path.parent.mkdir(exist_ok=True)
+    new_path = str(new_path)
     cmd = f'{which_ffmpeg()}'
     # no info/error printing
     cmd += ' -hide_banner -loglevel panic'
     cmd += f' -y -i {path}'
     # 1) change fps, 2) resize: min(H,W)=MIN_SIDE (vertical vids are supported), 3) change audio framerate
-    cmd += f" -vf fps={vfps},scale=iw*{input_size}/'min(iw,ih)':ih*{input_size}/'min(iw,ih)' -ar {afps}"
+    cmd += f" -vf fps={vfps},scale=iw*{input_size}/'min(iw,ih)':ih*{input_size}/'min(iw,ih)',crop='trunc(iw/2)'*2:'trunc(ih/2)'*2"
+    cmd += f" -ar {afps}"
     cmd += f' {new_path}'
     subprocess.call(cmd.split())
     cmd = f'{which_ffmpeg()}'
     cmd += ' -hide_banner -loglevel panic'
     cmd += f' -y -i {new_path}'
     cmd += f' -acodec pcm_s16le -ac 1'
-    cmd += f' {str(new_path).replace(".mp4", ".wav")}'
+    cmd += f' {new_path.replace(".mp4", ".wav")}'
     subprocess.call(cmd.split())
     return new_path
 
 def decode_single_video_prediction(off_logits, grid, item):
     label = item['targets']['offset_label'].item()
-    print('Ground Truth offset (sec):', label, f'({quantize_offset(grid, label)[-1].item()})')
+    print('Ground Truth offset (sec):', f'{label:.2f} ({quantize_offset(grid, label)[-1].item()})')
     print()
     print('Prediction Results:')
     off_probs = torch.softmax(off_logits, dim=-1)
@@ -103,12 +106,15 @@ def main(args):
 
     # checking if the provided video has the correct frame rates
     print(f'Using video: {args.vid_path}')
-    _, _, vid_meta = torchvision.io.read_video(args.vid_path)
-    if vid_meta['video_fps'] != args.vfps or vid_meta['audio_fps'] != args.afps:
-        print(f'Reencoding. vfps: {vid_meta["video_fps"]} -> {args.vfps}; afps: {vid_meta["audio_fps"]} -> {args.afps}')
+    v, a, vid_meta = torchvision.io.read_video(args.vid_path, pts_unit='sec')
+    T, H, W, C = v.shape
+    if vid_meta['video_fps'] != args.vfps or vid_meta['audio_fps'] != args.afps or min(H, W) != args.input_size:
+        print(f'Reencoding. vfps: {vid_meta["video_fps"]} -> {args.vfps};', end=' ')
+        print(f'afps: {vid_meta["audio_fps"]} -> {args.afps};', end=' ')
+        print(f'{(H, W)} -> min(H, W)={args.input_size}')
         args.vid_path = reencode_video(args.vid_path, args.vfps, args.afps, args.input_size)
     else:
-        print(f'No need to reencode. vfps: {vid_meta["video_fps"]}; afps: {vid_meta["audio_fps"]}')
+        print(f'No need to reencode. vfps: {vid_meta["video_fps"]}; afps: {vid_meta["audio_fps"]}; min(H, W)={args.input_size}')
 
     device = torch.device(args.device)
 
@@ -181,7 +187,7 @@ if __name__ == '__main__':
     parser.add_argument('--v_start_i_sec', type=float, default=0.0)
     parser.add_argument('--vfps', type=int, default=25)
     parser.add_argument('--afps', type=int, default=16000)
-    parser.add_argument('--input_size', type=int, default=224)
+    parser.add_argument('--input_size', type=int, default=256)
     parser.add_argument('--device', default='cuda:0')
     args = parser.parse_args()
     main(args)
