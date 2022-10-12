@@ -10,7 +10,7 @@ British Machine Vision Conference (BMVC), 2022
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rawAPksDHUioSXcAbQTn_kMbDl3nYg8q?usp=sharing)
 
-<img src="https://github.com/v-iashin/SparseSync/raw/main/_repo_assets/sparse_selector_teaser.png" alt="SparseSync Teaser (comparing viddeos with dense and sparse signals)" width="900">
+<img src="https://v-iashin.github.io/images/sparsesync/sparse_selector_teaser.png" alt="SparseSync Teaser (comparing viddeos with dense and sparse signals)" width="900">
 
 Audio-visual synchronisation is the task of determining the temporal offset between the audio and visual
 streams in a video.
@@ -19,7 +19,7 @@ spatially small and occur sparsely in time.
 However, recent literature was mostly dedicated to exploring videos of talking heads or playing instruments.
 Such videos have a dense synchronisation signal due to the strong correlation between audio and visual streams.
 
-<img src="https://github.com/v-iashin/SparseSync/raw/main/_repo_assets/sparse_selector_arch.png" alt="SparseSync Architecture" width="900">
+<img src="https://v-iashin.github.io/images/sparsesync/sparse_selector_arch.png" alt="SparseSync Architecture" width="900">
 
 To handle the synchronisation of sparse signals in time a model should be able to process longer video clips
 and have enough capacity to handle the diversity of scenes.
@@ -136,9 +136,8 @@ See `./data/lrs3/` (`LRS3_ROOT`) for the expected folder structure and a few exa
 VGGSound-Sparse is based on the
 [VGGSound dataset](https://www.robots.ox.ac.uk/~vgg/data/vggsound/)
 and you will need to obtain the original YouTube videos first.
-The annotations are available in `./_repo_assets/vggsound_sparse.csv` and you can freely
-[download](https://raw.githubusercontent.com/v-iashin/SparseSync/main/_repo_assets/vggsound_sparse.csv)
-them.
+The annotations are freely
+[downloadable](https://v-iashin.github.io/assets/sparsesync/vggsound_sparse.csv).
 
 There is no specific pre-processing is required on VGGSound videos, except for reencoding of streams.
 This can be achieved with the script that is available in `./scripts/reencode_videos.py`.
