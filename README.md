@@ -1,9 +1,14 @@
-# Sparse in Space and Time: Audio-visual Synchronisation with Trainable Selectors.
+# Audio-visual Synchronisation with Trainable Selectors
 
-British Machine Vision Conference (BMVC), 2022
+This is the official implementation of
 
-• [[Project Page](https://v-iashin.github.io/SparseSync)] •
-<!-- • [[ArXiv](http://arxiv.org/abs/2110.08791)] -->
+[Iashin, V., Xie, W., Rahtu, E. and Zisserman, A. "Sparse in Space and Time: Audio-visual Synchronisation with Trainable Selectors"](https://arxiv.org/abs/2210.07055)
+
+BMVC 2022 (Spotlight Presentation)
+
+• [[Project Page](https://v-iashin.github.io/SparseSync)]
+• [[ArXiv](https://arxiv.org/abs/2210.07055)]
+•
 <!-- • [[BMVC Proceedings](https://www.bmvc2021-virtualconference.com/conference/papers/paper_1213.html)] -->
 <!-- • [[Poster (for PAISS)](https://v-iashin.github.io/images/specvqgan/poster.pdf)] -->
 <!-- • [[Presentation on YouTube](https://www.youtube.com/watch?v=Bucb3nAa398)] ([Can't watch YouTube?](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/specvqgan_public/SpecVQGAN%20YouTube.mp4)) -->
@@ -27,7 +32,7 @@ To this end, we propose _SparseSelector_, a transformer-based architecture that 
 of long videos in linear complexity with respect to the number of input tokens which grows
 rapidly with sampling rate, resolution, and video duration.
 
-- [Sparse in Space and Time: Audio-visual Synchronisation with Trainable Selectors.](#sparse-in-space-and-time-audio-visual-synchronisation-with-trainable-selectors)
+- [Audio-visual Synchronisation with Trainable Selectors](#audio-visual-synchronisation-with-trainable-selectors)
   - [Environment Preparation](#environment-preparation)
   - [Prepare Data](#prepare-data)
     - [LRS3-H.264 and LRS3-H.264 ('No Face Crop')](#lrs3-h264-and-lrs3-h264-no-face-crop)
@@ -40,6 +45,8 @@ rapidly with sampling rate, resolution, and video duration.
   - [Evaluation](#evaluation)
   - [Examples](#examples)
   - [Citation](#citation)
+  - [LICENSE](#license)
+  - [Acknowledgements](#acknowledgements)
 
 ## Environment Preparation
 During experimentation, we used Linux machines with `conda` virtual environments, PyTorch 1.11 and CUDA 11.3.
@@ -360,9 +367,9 @@ python ./scripts/example.py \
 ```
 
 ## Citation
-Our paper was accepted at the BMVC 2022.
-Please, use this bibtex if you would like to cite our work:
-```
+Our paper was accepted for a spotlight presentation at the BMVC 2022.
+Please, use this BibTeX if you would like to cite our work:
+```bibtex
 @InProceedings{sparse2022iashin,
   title={Sparse in Space and Time: Audio-visual Synchronisation with Trainable Selectors},
   author={Iashin, V., Xie, W., Rahtu, E. and Zisserman, A.},
@@ -370,3 +377,13 @@ Please, use this bibtex if you would like to cite our work:
   year={2022}
 }
 ```
+
+## LICENSE
+This project is licensed under the MIT License. See LICENSE for more details.
+
+## Acknowledgements
+🙏
+
+Thanks to those who open-source their code:
+- The cleanest implementation of a transformer [minGPT](https://github.com/karpathy/minGPT)
+- A nice implementation of the [pre-trained S3D network in PyTorch](https://github.com/kylemin/S3D)
