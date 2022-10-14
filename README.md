@@ -34,6 +34,8 @@ rapidly with sampling rate, resolution, and video duration.
 
 - [Audio-visual Synchronisation with Trainable Selectors](#audio-visual-synchronisation-with-trainable-selectors)
   - [Environment Preparation](#environment-preparation)
+    - [Conda](#conda)
+    - [Docker](#docker)
   - [Prepare Data](#prepare-data)
     - [LRS3-H.264 and LRS3-H.264 ('No Face Crop')](#lrs3-h264-and-lrs3-h264-no-face-crop)
     - [VGGSound-Sparse](#vggsound-sparse)
@@ -57,6 +59,8 @@ Start by cloning this repo
 git clone https://github.com/v-iashin/SparseSync.git
 ```
 
+### Conda
+
 Next, install the environment.
 For your convenience, we provide a `conda` environment:
 <!-- and docker environments. -->
@@ -70,6 +74,46 @@ Test your environment
 conda activate sparse_sync
 python -c "import torch; print(torch.cuda.is_available())"
 # True
+```
+
+### Docker
+Download the image from Docker Hub and test if CUDA is available:
+```bash
+docker run \
+    --mount type=bind,source=/absolute/path/to/SparseSync/,destination=/home/ubuntu/SparseSync/ \
+    --mount type=bind,source=/absolute/path/to/logs/,destination=/home/ubuntu/SparseSync/logs/ \
+    --shm-size 8G \
+    -it --gpus '"device=0"' \
+    iashin/sparse_sync:latest \
+    python
+>>> import torch; print(torch.cuda.is_available())
+# True
+```
+or build it yourself
+```bash
+docker build - < Dockerfile --tag specvqgan
+```
+
+Try one of the examples:
+```bash
+docker run \
+    --mount type=bind,source=/absolute/path/to/SparseSync/,destination=/home/ubuntu/SparseSync/ \
+    --mount type=bind,source=/absolute/path/to/logs/,destination=/home/ubuntu/SparseSync/logs/ \
+    --shm-size 8G \
+    -it --gpus '"device=0"' \
+    iashin/sparse_sync:latest \
+    bash
+
+ubuntu@cfc79e3be757:~$
+cd SparseSync/
+
+ubuntu@cfc79e3be757:~/SparseSync$
+python ./scripts/example.py \
+  --exp_name "22-09-21T21-00-52" \
+  --vid_path "./data/vggsound/h264_video_25fps_256side_16000hz_aac/3qesirWAGt4_20000_30000.mp4" \
+  --offset_sec 1.6
+# Prediction Results:
+# p=0.8652 (8.4451), "1.60" (18)
 ```
 
 ## Prepare Data
