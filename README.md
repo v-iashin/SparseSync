@@ -171,13 +171,6 @@ Alternatively, you can download the pre-trained weights manually:
 [[config]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/cfg-22-09-21T21-00-52.yaml)
 [[ckpt]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/22-09-21T21-00-52.pt) (623 MB, md5: `83fba5f...`)
 
-```bash
-# replace "xx-xx-xxTxx-xx-xx" with the correct filename from above
-wget https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/xx-xx-xxTxx-xx-xx.zip
-unzip xx-xx-xxTxx-xx-xx.zip
-# it should create `./logs/` folder with the correct folder structure
-```
-
 ## Training
 
 The final model is pre-trained on dense signals (LRS3-H.264) and then finetuned on VGGSound-Sparse.
@@ -382,8 +375,6 @@ Please, use this BibTeX if you would like to cite our work:
 This project is licensed under the MIT License. See LICENSE for more details.
 
 ## Acknowledgements
-🙏
-
-Thanks to those who open-source their code:
+🙏 Thanks to all those who open-source their code:
 - The cleanest implementation of a transformer [minGPT](https://github.com/karpathy/minGPT)
 - A nice implementation of the [pre-trained S3D network in PyTorch](https://github.com/kylemin/S3D)
