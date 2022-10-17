@@ -40,6 +40,8 @@ rapidly with sampling rate, resolution, and video duration.
     - [LRS3-H.264 and LRS3-H.264 ('No Face Crop')](#lrs3-h264-and-lrs3-h264-no-face-crop)
     - [VGGSound-Sparse](#vggsound-sparse)
   - [Pre-trained Model Checkpoints](#pre-trained-model-checkpoints)
+    - [LRS3 ('No Face Crop') Models](#lrs3-no-face-crop-models)
+    - [VGGSound-Sparse Models](#vggsound-sparse-models)
   - [Training](#training)
     - [(Pre-)Train on LRS3-H.264 ('No face crop')](#pre-train-on-lrs3-h264-no-face-crop)
     - [Finetune on VGGSound-Sparse](#finetune-on-vggsound-sparse)
@@ -205,15 +207,22 @@ When you run an [example](#examples),
 the checkpoints and configs for `SparseSync` will be downloaded automatically.
 Alternatively, you can download the pre-trained weights manually:
 
-* Pre-trained on LRS3 ('No Face Crop'):
-[[config]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-13T22-25-49/cfg-22-07-13T22-25-49.yaml)
-[[ckpt]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-13T22-25-49/22-07-13T22-25-49.pt) (623 MB, md5: `63f883e...`)
-* Fine-tuned on VGGSound-Sparse, pre-trained on LRS ('No Face Crop'):
-[[config]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-28T15-49-45/cfg-22-07-28T15-49-45.yaml)
-[[ckpt]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt) (623 MB, md5: `a26f207...`)
-* Fine-tuned on VGGSound (full), pre-trained on LRS ('No Face Crop'):
-[[config]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/cfg-22-09-21T21-00-52.yaml)
-[[ckpt]](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/22-09-21T21-00-52.pt) (623 MB, md5: `83fba5f...`)
+### LRS3 ('No Face Crop') Models
+
+| Pre-trained on        | Fine-tuned on | Accuracy | config                                                                                                                              | ckpt                                                                                                                                              |
+| --------------------- | ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LRS3 (‘No Face Crop’) | --            | 96.9     | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-13T22-25-49/cfg-22-07-13T22-25-49.yaml) | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-13T22-25-49/22-07-13T22-25-49.pt) (md5: `63f883e...`) |
+
+The model is evaluated on the test set of LRS3 ('No Face Crop')
+
+### VGGSound-Sparse Models
+
+| Pre-trained on        | Fine-tuned on   | Accuracy | config                                                                                                                              | ckpt                                                                                                                                                |
+| --------------------- | --------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LRS3 (‘No Face Crop’) | VGGSound-Sparse | 44.3     | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-28T15-49-45/cfg-22-07-28T15-49-45.yaml) | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt) (md5: `a26f207...`)   |
+| LRS3 (‘No Face Crop’) | VGGSound        | 51.2     | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/cfg-22-09-21T21-00-52.yaml) | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/22-09-21T21-00-52.pt) (md5:  `83fba5f...` ) |
+
+The models are evaluated on the test set of VGGSound-Sparse.
 
 ## Training
 
