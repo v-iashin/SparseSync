@@ -1,3 +1,8 @@
+# UT Fork of SparseSync
+
+Below README.md file is from the original SparseSync repo. This fork exists for evaluating SparseSync on our data and experimenting with modifications to the SparseSync architecture. 
+
+
 # Audio-visual Synchronisation with Trainable Selectors
 
 This is the official implementation of
