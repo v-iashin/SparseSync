@@ -11,7 +11,7 @@ NUM_WORKERS = 32
 V_FPS = 25
 MIN_SIDE = 256
 A_FPS = 16000
-ORIG_PATH = Path('./data/vggsound/video/')
+ORIG_PATH = Path('./data/preliminary_eval/')
 VCODEC = 'h264'
 CRF = 10
 PIX_FMT = 'yuv420p'
@@ -30,7 +30,7 @@ def which_ffmpeg() -> str:
 
 def get_new_path(path, vcodec, acodec, v_fps, min_side, a_fps, orig_path, prefix='video') -> Path:
     new_folder_name = f'{vcodec}_{prefix}_{v_fps}fps_{min_side}side_{a_fps}hz_{acodec}'
-    if 'vggsound' in str(orig_path):
+    if 'vggsound' in str(orig_path) or 'prelim' in str(orig_path):
         new_folder_path = orig_path.parent / new_folder_name
     elif 'mjpeg' in str(orig_path) or 'lrs3' in str(orig_path):
         new_folder_path = Path(str(path.parent).replace(orig_path.name, f'/{new_folder_name}/'))
@@ -46,7 +46,7 @@ def reencode_video(path):
     # reencode the original mp4: rescale, resample video and resample audio
     cmd = f'{which_ffmpeg()}'
     # no info/error printing
-    cmd += ' -hide_banner -loglevel panic'
+    cmd += ' -hide_banner -loglevel fatal' # panic'
     cmd += f' -i {path}'
     # 1) change fps, 2) resize: min(H,W)=MIN_SIDE (vertical vids are supported), 3) change audio framerate
     cmd += f" -vf fps={V_FPS},scale=iw*{MIN_SIDE}/'min(iw,ih)':ih*{MIN_SIDE}/'min(iw,ih)',crop='trunc(iw/2)'*2:'trunc(ih/2)'*2"
@@ -64,6 +64,8 @@ def main():
 
     if 'vggsound' in str(ORIG_PATH):
         paths_glob = str(ORIG_PATH / '*.mp4')
+    if 'prelim' in str(ORIG_PATH):
+        paths_glob = str(ORIG_PATH / '*.mkv')
     elif 'lrs3' in str(ORIG_PATH):
         paths_glob = str(ORIG_PATH / '*/*/*.mp4')
     video_paths = [Path(p) for p in sorted(glob(paths_glob))]

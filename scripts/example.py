@@ -47,6 +47,8 @@ def decode_single_video_prediction(off_logits, grid, item):
     print('Prediction Results:')
     off_probs = torch.softmax(off_logits, dim=-1)
     k = min(off_probs.shape[-1], 5)
+    # print('all probs:', off_probs)
+    print('correct prob:', off_probs[0,quantize_offset(grid,label)[-1].item()])
     topk_logits, topk_preds = torch.topk(off_logits, k)
     # remove batch dimension
     assert len(topk_logits) == 1, 'batch is larger than 1'
@@ -177,6 +179,8 @@ def main(args):
 
     # simply prints the results of the prediction
     decode_single_video_prediction(off_logits, grid, item)
+
+    # print(off_logits)
 
 
 if __name__ == '__main__':
