@@ -11,7 +11,7 @@ NUM_WORKERS = 32
 V_FPS = 25
 MIN_SIDE = 256
 A_FPS = 16000
-ORIG_PATH = Path('./data/preliminary_eval/')
+ORIG_PATH = Path('./data/preliminary_eval/temp/')
 VCODEC = 'h264'
 CRF = 10
 PIX_FMT = 'yuv420p'
@@ -46,8 +46,10 @@ def reencode_video(path):
     # reencode the original mp4: rescale, resample video and resample audio
     cmd = f'{which_ffmpeg()}'
     # no info/error printing
-    cmd += ' -hide_banner -loglevel fatal' # panic'
+    cmd += ' -hide_banner -loglevel error' # panic'
     cmd += f' -i {path}'
+    # Solve error by increasing memory?
+    cmd += f' -max_muxing_queue_size 2048'
     # 1) change fps, 2) resize: min(H,W)=MIN_SIDE (vertical vids are supported), 3) change audio framerate
     cmd += f" -vf fps={V_FPS},scale=iw*{MIN_SIDE}/'min(iw,ih)':ih*{MIN_SIDE}/'min(iw,ih)',crop='trunc(iw/2)'*2:'trunc(ih/2)'*2"
     cmd += f" -vcodec {VCODEC} -pix_fmt {PIX_FMT} -crf {CRF}"

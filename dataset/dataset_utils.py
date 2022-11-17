@@ -11,6 +11,7 @@ from utils.utils import get_fixed_off_fname
 
 def get_fixed_offsets(transforms, split, splits_path, dataset_name):
     '''dataset_name: `vggsound` or `lrs3`'''
+    # TODO: Add sports and news dataset, load the vid2offset_params dict directly from json, instead of doing this building thing
     vid2offset_params = {}
     fixed_offset_fname = get_fixed_off_fname(transforms, split)
     fixed_offset_path = os.path.join(splits_path, f'fixed_offsets_{dataset_name}', fixed_offset_fname)
