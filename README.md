@@ -9,8 +9,8 @@ BMVC 2022 (Spotlight Presentation)
 • [[Project Page](https://v-iashin.github.io/SparseSync)]
 • [[ArXiv](https://arxiv.org/abs/2210.07055)]
 • [[BMVC Proceedings](https://bmvc2022.mpi-inf.mpg.de/395/)]
-• [[Presentation (full)](https://www.youtube.com/watch?v=q-232MJo0_E)])
-• [[Presentation (spotlight)](https://www.youtube.com/watch?v=DKNNQ54zkIw)]) •
+• [[Presentation (full)](https://www.youtube.com/watch?v=q-232MJo0_E)]
+• [[Presentation (spotlight)](https://www.youtube.com/watch?v=DKNNQ54zkIw)] •
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rawAPksDHUioSXcAbQTn_kMbDl3nYg8q?usp=sharing)
 
