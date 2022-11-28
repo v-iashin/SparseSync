@@ -8,10 +8,9 @@ BMVC 2022 (Spotlight Presentation)
 
 • [[Project Page](https://v-iashin.github.io/SparseSync)]
 • [[ArXiv](https://arxiv.org/abs/2210.07055)]
-•
-<!-- • [[BMVC Proceedings](https://www.bmvc2021-virtualconference.com/conference/papers/paper_1213.html)] -->
-<!-- • [[Poster (for PAISS)](https://v-iashin.github.io/images/specvqgan/poster.pdf)] -->
-<!-- • [[Presentation on YouTube](https://www.youtube.com/watch?v=Bucb3nAa398)] ([Can't watch YouTube?](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/specvqgan_public/SpecVQGAN%20YouTube.mp4)) -->
+• [[BMVC Proceedings](https://bmvc2022.mpi-inf.mpg.de/395/)]
+• [[Presentation (full)](https://www.youtube.com/watch?v=q-232MJo0_E)])
+• [[Presentation (spotlight)](https://www.youtube.com/watch?v=DKNNQ54zkIw)]) •
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rawAPksDHUioSXcAbQTn_kMbDl3nYg8q?usp=sharing)
 
