@@ -7,11 +7,16 @@ import torchvision
 from glob import glob
 import shutil
 from utils.utils import get_fixed_off_fname
+import json
 
 
-def get_fixed_offsets(transforms, split, splits_path, dataset_name):
-    '''dataset_name: `vggsound` or `lrs3`'''
+def get_fixed_offsets(transforms, split, splits_path, dataset_name, sports_and_news_path=None):
+    '''dataset_name: `vggsound` or `lrs3` or `sports_and_news`'''
     # TODO: Add sports and news dataset, load the vid2offset_params dict directly from json, instead of doing this building thing
+    if dataset_name == "sports_and_news":
+        with open(sports_and_news_path, 'r') as file_data:
+            return json.load(file_data)
+    
     vid2offset_params = {}
     fixed_offset_fname = get_fixed_off_fname(transforms, split)
     fixed_offset_path = os.path.join(splits_path, f'fixed_offsets_{dataset_name}', fixed_offset_fname)
