@@ -149,10 +149,14 @@ class PositionEmbeddingLearnedVisual(nn.Module):
         Returns:
             torch.Tensor: x + pos
         '''
+        print('x shape', x.shape)
         return x + self.make_pos_emb(x)
 
     def make_pos_emb(self, x):
+        # Compare to: [10, 19, 7, 7, 512]
+        # All of these are ordered correctly, but the config max t is 16
         B, t, h, w, d = x.shape
+        assert(t <= self.max_t)
         t_i = torch.arange(t, device=x.device)
         w_i = torch.arange(w, device=x.device)
         h_i = torch.arange(h, device=x.device)

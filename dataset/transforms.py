@@ -285,7 +285,7 @@ class TemporalCropAndOffsetRandomFeasible(TemporalCropAndOffset):
         return a_start_i, a_jitter_i
 
 
-    def forward(self, item):
+    def forward(self, item): #, skip_start_offset=False):
         vid = item['video']
         aud = item['audio']
         v_len_frames, C, H, W = vid.shape
@@ -321,12 +321,20 @@ class TemporalCropAndOffsetRandomFeasible(TemporalCropAndOffset):
                     a_start_i, a_jitter_i = self.apply_a_jitter(a_start_i, max_a_start_i, a_fps)
                     item['meta']['a_jitter_i'] = a_jitter_i
                 a_end_i = a_start_i + a_crop_len_frames
+            else: #if skip_start_offset:
+                offset_sec = round(offset_sec, 2)
+                v_start_i = sec2frames(2, v_fps)
+                a_start_i = sec2frames(2+offset_sec, a_fps)
+                v_end_i = v_start_i + v_crop_len_frames
+                a_end_i = a_start_i + a_crop_len_frames
+            """
             else:
                 offset_sec = round(offset_sec, 2)
                 v_start_i = sec2frames(v_start_i_sec, v_fps)
                 a_start_i = sec2frames(v_start_i_sec + offset_sec, a_fps)
                 v_end_i = v_start_i + v_crop_len_frames
                 a_end_i = a_start_i + a_crop_len_frames
+            """
         else:
             offset_sec = 0.0
             is_random_crop = item['split'] == 'train'
@@ -359,6 +367,9 @@ class TemporalCropAndOffsetRandomFeasible(TemporalCropAndOffset):
 
         item['video'] = vid
         item['audio'] = aud
+
+        print('cropped video and audio to', self.crop_len_sec, 'seconds')
+        print('at', v_fps, 'frames per second that should be', v_fps*self.crop_len_sec, 'frames')
 
         assert item['video'].shape[0] == v_fps * self.crop_len_sec, f'{item["video"].shape} {item["path"]}'
         assert item['audio'].shape[0] == a_fps * self.crop_len_sec, f'{item["audio"].shape} {item["path"]}'

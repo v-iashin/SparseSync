@@ -6,6 +6,8 @@ import torchaudio
 import torchvision
 from glob import glob
 import shutil
+import sys
+sys.path.append('..')
 from utils.utils import get_fixed_off_fname
 import json
 
@@ -57,18 +59,27 @@ def get_video_and_audio(path, get_meta=False, max_clip_len_sec=None, start_sec=N
     # load it because it thinks that the file exists. However, I am not sure if it works :/.
     # Feel free to refactor it.
     try:
-        rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec, end_pts=max_clip_len_sec)
-        meta['video_fps']
+        if start_sec != None:
+            end_sec = start_sec+max_clip_len_sec+2
+            rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec-2, end_pts=end_sec)
+        else:
+            rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', end_pts=max_clip_len_sec)
     except KeyError:
         print(f'Problem at {path}. Trying to wait and load again...')
         sleep(5)
-        rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec, end_pts=max_clip_len_sec)
+        if start_sec != None:
+            end_sec = start_sec+max_clip_len_sec+2
+        rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec-2, end_pts=end_sec)
         meta['video_fps']
     # (T, 3, H, W) [0, 255, uint8] <- (T, H, W, 3)
     rgb = rgb.permute(0, 3, 1, 2)
     # (Ta) <- (Ca, Ta)
     audio = audio.mean(dim=0)
     # FIXME: this is legacy format of `meta` as it used to be loaded by VideoReader.
+    if meta == {}:
+        print('video path of failure', path)
+        print('extracted rgb and audio shapes', rgb.shape, audio.shape)
+        exit(0)
     meta = {
         'video': {'fps': [meta['video_fps']]},
         'audio': {'framerate': [meta['audio_fps']]},
