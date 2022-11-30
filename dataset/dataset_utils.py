@@ -46,18 +46,18 @@ def maybe_cache_file(path: os.PathLike):
         return path
 
 
-def get_video_and_audio(path, get_meta=False, max_clip_len_sec=None):
+def get_video_and_audio(path, get_meta=False, max_clip_len_sec=None, start_sec=None):
     path = maybe_cache_file(path)
     # try-except was meant to solve issue when `maybe_cache_file` copies a file but another worker tries to
     # load it because it thinks that the file exists. However, I am not sure if it works :/.
     # Feel free to refactor it.
     try:
-        rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', end_pts=max_clip_len_sec)
+        rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec, end_pts=max_clip_len_sec)
         meta['video_fps']
     except KeyError:
         print(f'Problem at {path}. Trying to wait and load again...')
         sleep(5)
-        rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', end_pts=max_clip_len_sec)
+        rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec, end_pts=max_clip_len_sec)
         meta['video_fps']
     # (T, 3, H, W) [0, 255, uint8] <- (T, H, W, 3)
     rgb = rgb.permute(0, 3, 1, 2)
