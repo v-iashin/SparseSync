@@ -1,0 +1,317 @@
+action: train_avsync_model
+model:
+  target: model.sync_model.AVSyncModel
+  params:
+    afeat_extractor:
+      is_trainable: true
+      target: model.modules.feature_extractors.ResNet18AudioFeatures
+      params:
+        ckpt_path: ./logs/feature_extractors/22-06-24T08-10-33/ResNetAudio-22-06-24T08-10-33.pt
+    vfeat_extractor:
+      is_trainable: true
+      target: model.modules.feature_extractors.S3DVisualFeatures
+      params:
+        ckpt_path: ./model/modules/feat_extractors/visual/S3D_kinetics400_torchified.pt
+    a_bridge_cfg:
+      target: model.modules.bridges.DoNothingBridge
+    v_bridge_cfg:
+      target: model.modules.bridges.ConvBridgeVisual
+      params:
+        in_channels: 1024
+        out_channels: 512
+        kernel_size:
+        - 1
+        - 1
+        - 1
+        stride:
+        - 1
+        - 1
+        - 1
+        padding:
+        - 0
+        - 0
+        - 0
+        bias: true
+    transformer:
+      target: model.modules.feature_selector.SparseSync
+      params:
+        num_offset_cls: 21
+        visual_block_shape:
+        - 16
+        - 7
+        - 7
+        audio_block_shape:
+        - 9
+        - 20
+        pre_norm_cfg:
+          target: torch.nn.LayerNorm
+          params:
+            normalized_shape: 512
+        n_layer: 3
+        n_head: 8
+        n_embd: 512
+        tok_pdrop: 0.0
+        embd_pdrop: 0.1
+        resid_pdrop: 0.1
+        attn_pdrop: 0.1
+        vis_pos_emb_module:
+          target: model.modules.transformer.PositionEmbeddingLearnedVisual
+          params:
+            block_shape:
+            - 16
+            - 7
+            - 7
+            n_embd: 512
+        aud_pos_emb_module:
+          target: model.modules.transformer.PositionEmbeddingLearnedAudio
+          params:
+            block_shape:
+            - 9
+            - 20
+            n_embd: 512
+        a_selector_cfg:
+          target: model.modules.feature_selector.FeatureSelectorTransformer
+          params:
+            num_selectors: 16
+            n_layer: 3
+            n_head: 8
+            n_embd: 512
+            embd_pdrop: 0.1
+            resid_pdrop: 0.1
+            attn_pdrop: 0.1
+            pos_emb_cfg:
+              target: model.modules.feature_selector.PositionEmbeddingSelectors
+              params:
+                max_pos: 16
+                n_embd: 512
+        v_selector_cfg:
+          target: model.modules.feature_selector.FeatureSelectorTransformer
+          params:
+            num_selectors: 16
+            n_layer: 3
+            n_head: 8
+            n_embd: 512
+            embd_pdrop: 0.1
+            resid_pdrop: 0.1
+            attn_pdrop: 0.1
+            pos_emb_cfg:
+              target: model.modules.feature_selector.PositionEmbeddingSelectors
+              params:
+                max_pos: 16
+                n_embd: 512
+        global_transformer_cfg:
+          target: model.modules.feature_selector.GlobalTransformer
+          params:
+            n_layer: 3
+            n_head: 8
+            n_embd: 512
+            tok_pdrop: 0.0
+            embd_pdrop: 0.1
+            resid_pdrop: 0.1
+            attn_pdrop: 0.1
+training:
+  base_learning_rate: 5.0e-06
+  base_batch_size: 10
+  num_epochs: 10000
+  patience: 120
+  to_max_metric: true
+  metric_name: accuracy_1
+  early_stop_phase: valid
+  num_workers: 8
+  use_half_precision: true
+  mixup_alpha: 0.0
+  seed: 1337
+  run_test_only: false
+  resume: false
+  finetune: true
+  detect_anomaly: false
+  dist_backend: nccl
+  max_clip_norm: 1
+  run_corrupted_val: true
+  lr_scheduler:
+    name: constant_with_warmup
+    warmup: 1000
+  optimizer:
+    name: adam
+    betas:
+    - 0.9
+    - 0.999
+    momentum: 0.9
+    weight_decay: 0
+  local_rank: 0
+  global_rank: 0
+  world_size: 8
+data:
+  crop_len_sec: 5
+  max_off_sec: 2
+  # vids_path: /scratch/project_2000936//vladimir/vggsound/h264_video_25fps_256side_16000hz_aac/
+  vids_path: /saltpool0/data/datasets/avsync/data/v5/videos/
+  size_before_crop: 256
+  input_size: 224
+  do_offset: true
+  p_color_jitter: 0.2
+  p_gray_scale: 0.2
+  sometimes_upscale_p: 0.5
+  is_spatial_crop_random: true
+  audio_jitter_sec: 0.05
+  p_horizontal_flip: 0.5
+  p_audio_aug: 0.2
+  to_freeze_frames: false
+  to_corrupt_audio: false
+  corrupt_type: mute
+  active_min_overlap_sec: 1
+  dataset:
+    target: dataset.sports_and_news.SportsAndNews
+    params:
+      load_fixed_offsets_on_test: true
+      vis_load_backend: read_video
+      size_ratio: null
+transform_sequence_train:
+- target: dataset.transforms.EqualifyFromRight
+  params:
+    clip_max_len_sec: 5
+- target: dataset.transforms.RGBSpatialCropSometimesUpscale
+  params:
+    sometimes_p: 0.5
+    smaller_input_size: 192
+    target_input_size: 224
+    is_random: true
+- target: dataset.transforms.TemporalCropAndOffsetRandomFeasible
+  params:
+    crop_len_sec: 5
+    max_off_sec: 2
+    max_wiggle_sec: 0.05
+    do_offset: true
+    grid_type: linspace
+    grid_size: 21
+- target: dataset.transforms.RandomApplyColorDistortion
+  params:
+    p_color_jitter: 0.2
+    s: 1.0
+    p_gray_scale: 0.2
+- target: dataset.transforms.RandomHorizontalFlip
+  params:
+    p: 0.5
+- target: dataset.transforms.FreezeFrames
+  params:
+    max_off_sec: 2
+    active_min_overlap_sec: 1
+    to_freeze_frames: false
+- target: dataset.transforms.CorruptAudio
+  params:
+    max_off_sec: 2
+    active_min_overlap_sec: 1
+    to_corrupt_audio: false
+    corrupt_type: mute
+- target: dataset.transforms.RGBToFloatToZeroOne
+- target: dataset.transforms.RGBNormalize
+  params:
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+- target: dataset.transforms.AudioRandomReverb
+  params:
+    p: 0.2
+- target: dataset.transforms.AudioRandomVolume
+  params:
+    p: 0.2
+    gain: 2.0
+    gain_type: amplitude
+- target: dataset.transforms.AudioRandomPitchShift
+  params:
+    p: 0.2
+    shift: 1000
+- target: dataset.transforms.AudioRandomLowpassFilter
+  params:
+    p: 0.2
+    cutoff_freq: 100
+- target: dataset.transforms.AudioRandomGaussNoise
+  params:
+    p: 0.2
+    amplitude: 0.01
+- target: dataset.transforms.AudioSpectrogram
+  params:
+    n_fft: 512
+    hop_length: 128
+- target: dataset.transforms.AudioLog
+- target: dataset.transforms.AudioRandomFreqMask
+  params:
+    p: 0.2
+    freq_mask_param: 64
+- target: dataset.transforms.AudioRandomTimeMask
+  params:
+    p: 0.2
+    time_mask_param: 200
+- target: dataset.transforms.AudioStandardNormalize
+- target: dataset.transforms.AudioUnsqueezeChannelDim
+  params:
+    dim: 0
+transform_sequence_test:
+- target: dataset.transforms.EqualifyFromRight
+- target: dataset.transforms.RGBSpatialCrop
+  params:
+    input_size: 224
+    is_random: false
+- target: dataset.transforms.TemporalCropAndOffsetRandomFeasible
+  params:
+    crop_len_sec: 5
+    max_off_sec: 2
+    do_offset: true
+    grid_type: linspace
+    grid_size: 21
+- target: dataset.transforms.FreezeFrames
+  params:
+    max_off_sec: 2
+    active_min_overlap_sec: 1
+    to_freeze_frames: false
+- target: dataset.transforms.CorruptAudio
+  params:
+    max_off_sec: 2
+    active_min_overlap_sec: 1
+    to_corrupt_audio: false
+    corrupt_type: mute
+- target: dataset.transforms.RGBToFloatToZeroOne
+- target: dataset.transforms.RGBNormalize
+  params:
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+- target: dataset.transforms.AudioSpectrogram
+  params:
+    n_fft: 512
+    hop_length: 128
+- target: dataset.transforms.AudioLog
+- target: dataset.transforms.AudioStandardNormalize
+- target: dataset.transforms.AudioUnsqueezeChannelDim
+  params:
+    dim: 0
+logging:
+  logdir: /saltpool0/scratch/layneberry/sync_models/
+  # logdir: /scratch/project_2000936//vladimir/logs/sync/sync_models/
+  log_code_state: true
+  patterns_to_ignore:
+  - logs
+  - .git
+  - __pycache__
+  - data
+  - '*.pt'
+  - sbatch_logs
+  - '*.mp4'
+  - '*.wav'
+  - '*.jpg'
+  - '*.gif'
+  use_wandb: true
+start_time: 22-07-28T15-49-45
+config: ./configs/av_sync.yaml
+ckpt_path: ./logs/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt
+# ckpt_path: /scratch/project_2000936//vladimir/logs/sync/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt
