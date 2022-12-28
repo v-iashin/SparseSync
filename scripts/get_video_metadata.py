@@ -10,13 +10,20 @@ import sys
 
 def main(root: str = "/saltpool0/data/datasets/avsync/data/v5/", filename: str = "all_video_metadata.json"):
     categories = {}
-    with open(os.path.join(root, "vid_links.txt")) as links_file:
-        for line in links_file:
-            link, category, _ = line.split(", ")
-            video_id = link.replace("https://www.youtube.com/watch?v=", '')
-            categories[video_id] = category[4:-4]
 
-    with open(os.path.join(root, "vid_links_v2.txt")) as links_file:
+    # with open(os.path.join(root, "vid_links.txt")) as links_file:
+    #     for line in links_file:
+    #         link, category, _ = line.split(", ")
+    #         video_id = link.replace("https://www.youtube.com/watch?v=", '')
+    #         categories[video_id] = category[4:-4]
+
+    # with open(os.path.join(root, "vid_links_v2.txt")) as links_file:
+    #     for line in links_file:
+    #         link, category, _ = line.split(", ")
+    #         video_id = link.replace("https://www.youtube.com/watch?v=", '')
+    #         categories[video_id] = category[4:-4]
+
+    with open(os.path.join(root, "vid_links_v3.txt")) as links_file:
         for line in links_file:
             link, category, _ = line.split(", ")
             video_id = link.replace("https://www.youtube.com/watch?v=", '')
@@ -24,14 +31,13 @@ def main(root: str = "/saltpool0/data/datasets/avsync/data/v5/", filename: str =
 
     data_path = os.path.join(root, "videos")
     all_data = []
-    for n, video_id in enumerate(listdir(data_path)):
-        sys.stdout.write(f"\rProgress: {n / len(listdir(data_path)) * 100}%{' '*100}")
+    for n, video_id in enumerate(categories):
+        sys.stdout.write(f"\rProgress: {n / len(categories) * 100}%{' '*100}")
         video_data = {"video_id":video_id, "clips":[]}
         if not os.path.isdir(os.path.join(data_path, video_id)): continue
         for clip_file in listdir(os.path.join(data_path, video_id)):
             clip_split = clip_file.split('.')
             if len(clip_split) != 2 and clip_split[1] != '.mkv': continue
-            # clip_start, clip_stop = map(int, clip_split[0].replace(video_id, '').split('_')[1:])
             full_path = os.path.join(data_path, video_id, clip_file)
             category = categories[video_id]
             
@@ -48,8 +54,10 @@ def main(root: str = "/saltpool0/data/datasets/avsync/data/v5/", filename: str =
                     }
                     video_data["clips"].append(clip_data)
             except PermissionError:
+                print(f"Could not open (permissions):  {full_path}")
                 continue
             except enzyme.exceptions.MalformedMKVError:
+                print(f"Could not open (mkv metadata): {full_path}")
                 continue
         all_data.append(video_data)
     print(f"\nDone! Saving to {filename}")
