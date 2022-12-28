@@ -291,6 +291,8 @@ class TemporalCropAndOffsetRandomFeasible(TemporalCropAndOffset):
         v_len_frames, C, H, W = vid.shape
         a_len_frames = aud.shape[0]
 
+        print('audio shape at start of forward', aud.shape)
+
         v_fps = int(item['meta']['video']['fps'][0])
         a_fps = int(item['meta']['audio']['framerate'][0])
 
@@ -359,6 +361,7 @@ class TemporalCropAndOffsetRandomFeasible(TemporalCropAndOffset):
             else:
                 raise Exception(f'{how_much_out} {item["path"]}')
 
+        print('audio shape right before check', aud.shape)
         assert v_start_i < v_end_i and a_start_i < a_end_i
         assert aud.shape[0] >= a_end_i, f'{aud.shape} {a_end_i} {item["path"]}'
         assert vid.shape[0] >= v_end_i, f'{vid.shape} {v_end_i} {item["path"]}'

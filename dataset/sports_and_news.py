@@ -52,7 +52,7 @@ class SportsAndNews(torch.utils.data.Dataset):
                 assert(len(file_name_chunks) >= 5)
                 file_stem = '_'.join(file_name_chunks[:-2])
                 video_folder = '_'.join(file_name_chunks[:-4])
-                full_path = '/saltpool0/data/datasets/avsync/data/v5/videos_at_25fps/' + video_folder + '/' + file_stem + '.mkv'
+                full_path = '/saltpool0/data/datasets/avsync/data/v5/videos_at_25fps-encode_script/' + video_folder + '/' + file_stem + '.mkv'
                 video_id = line.split(',')[0]
                 tup = (video_id, full_path, float(line.split(',')[1]))
                 clip_paths.append(tup)
@@ -95,7 +95,7 @@ class SportsAndNews(torch.utils.data.Dataset):
             # print('item has offset', item['targets']['offset_sec'], 'v_start_i_sec', item['targets']['v_start_i_sec'], 'video shape', item['video'].shape, 'audio shape', item['audio'].shape, 'and meta', item['meta'])
 
             if self.transforms is not None:
-                # print('self.transforms', self.transforms)
+                print('self.transforms', self.transforms)
                 item = self.transforms(item) # , skip_start_offset=True)
                 # TODO: Changed functionality of a transform to make this work; may need to change back for original SparseSync datasets to work
 
