@@ -149,7 +149,6 @@ class PositionEmbeddingLearnedVisual(nn.Module):
         Returns:
             torch.Tensor: x + pos
         '''
-        print('x shape', x.shape)
         return x + self.make_pos_emb(x)
 
     def make_pos_emb(self, x):

@@ -11,7 +11,8 @@ NUM_WORKERS = 32
 V_FPS = 25
 MIN_SIDE = 256
 A_FPS = 16000
-ORIG_PATH = Path('./data/preliminary_eval/temp/')
+# ORIG_PATH = Path('./data/preliminary_eval/temp/')
+ORIG_PATH = Path('/saltpool0/data/datasets/avsync/data/v5/videos/')
 VCODEC = 'h264'
 CRF = 10
 PIX_FMT = 'yuv420p'
@@ -34,6 +35,8 @@ def get_new_path(path, vcodec, acodec, v_fps, min_side, a_fps, orig_path, prefix
         new_folder_path = orig_path.parent / new_folder_name
     elif 'mjpeg' in str(orig_path) or 'lrs3' in str(orig_path):
         new_folder_path = Path(str(path.parent).replace(orig_path.name, f'/{new_folder_name}/'))
+    elif 'avsync' in str(orig_path):
+        new_folder_path = Path(f"{str(path.parent.parent.parent)}/{str(path.parent.parent.name)}_at_25_fps-test/{str(path.parent.name)}/")
     else:
         raise NotImplementedError
     os.makedirs(new_folder_path, exist_ok=True)
@@ -58,7 +61,8 @@ def reencode_video(path):
     if new_path.exists():
         print('already exists', new_path)
     else:
-        subprocess.call(cmd.split())
+        if subprocess.call(cmd.split()) != 0:
+            print(f"Failed on {path.name}")
 
 
 def main():
@@ -66,12 +70,14 @@ def main():
 
     if 'vggsound' in str(ORIG_PATH):
         paths_glob = str(ORIG_PATH / '*.mp4')
-    if 'prelim' in str(ORIG_PATH):
+    elif 'prelim' in str(ORIG_PATH):
         paths_glob = str(ORIG_PATH / '*.mkv')
     elif 'lrs3' in str(ORIG_PATH):
         paths_glob = str(ORIG_PATH / '*/*/*.mp4')
+    elif 'avsync' in str(ORIG_PATH):
+        paths_glob = str(ORIG_PATH / '*/*[!_broken][!_silent].mkv')
     video_paths = [Path(p) for p in sorted(glob(paths_glob))]
-    print(len(video_paths))
+    print(f"Found {len(video_paths)} clips")
     assert len(video_paths) > 0
 
     random.shuffle(video_paths)

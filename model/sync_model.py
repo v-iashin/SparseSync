@@ -30,19 +30,12 @@ class AVSyncModel(torch.nn.Module):
         Returns:
             tuple(Tensor, Tensor), tuple(Tensor, Tensor), Tensor: loss values, logits
         '''
-        print('vis shape before extraction', vis.shape)
-        print('aud shape before extraction', aud.shape)
 
         vis = self.vfeat_extractor(vis)
         aud = self.afeat_extractor(aud)
 
-        print('vis shape between extraction and bridge', vis.shape)
-        print('aud shape between extraction and bridge', aud.shape)
-
         vis = self.v_bridge(vis.permute(0, 2, 1, 3, 4)).permute(0, 2, 1, 3, 4)
         aud = self.a_bridge(aud)
-
-        print('applying transformer to vis of shape', vis.shape, 'and aud of shape', aud.shape)
 
         logits = self.transformer(vis, aud)
 
