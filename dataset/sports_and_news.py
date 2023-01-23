@@ -9,7 +9,6 @@ from pathlib import Path
 import torch
 
 sys.path.insert(0, '.')
-print('path is', sys.path)
 # was dataset.data_utils
 from dataset.dataset_utils import (get_fixed_offsets, get_video_and_audio) 
 
@@ -25,7 +24,8 @@ class SportsAndNews(torch.utils.data.Dataset):
                  seed=1337,
                  load_fixed_offsets_on_test=True,
                  vis_load_backend=None, # This doesn't appear to be used anywhere, so can be empty
-                 size_ratio=None):
+                 size_ratio=None,
+                 channel='CNN'):
         super().__init__()
         self.max_clip_len_sec = 5 # VGGSound has None, LRS has 11
         logger.info(f'During IO, the length of clips is limited to {self.max_clip_len_sec} sec')
@@ -41,13 +41,34 @@ class SportsAndNews(torch.utils.data.Dataset):
         if split == 'test': # TODO: Existing code only supports evaluation on the "test" split; using our val split for that, but will need to refactor if we want to do both using their code
             data_csv = open('data/sports_and_news_normal.evaluation.csv').readlines()
             offset_path = 'data/sports_and_news_normal.evaluation.json'
+            skip_ids = [line.strip() for line in open('data/sports_and_news_normal.evaluation.skip_id_list.txt')]
         else:
             self.dataset = [0]
             return # Not set up yet!
         clip_paths = []
 
+        broken_vids = skip_ids #'bcdWbE64hDE_900_1200', 'alY7_M_ibR4_900_1200']
+
         for line in data_csv:
-            if 'broken' not in line:
+            skip = 'broken' in line
+            if channel != None:
+                if channel not in line:
+                    skip = True
+            for bv in broken_vids:
+                # Parsing ids
+                bv = bv[:-2] # Cut the _0 at the end
+                if bv[-3] == '_': # 10-90
+                    bv_vid = bv[:-3]
+                    bv_offset = int(bv[-2:])
+                elif bv[-4] == '_': # 90-990
+                    bv_vid = bv[:-4]
+                    bv_offset = int(bv[-3:])
+                else:
+                    print('PROBLEM: NOT SURE HOW TO PARSE VIDEO ID', bv)
+                if bv_vid in line:
+                    if int(float(line.split(',')[1])) == bv_offset:
+                        skip = True
+            if not skip:
                 file_name_chunks = line.split(',')[0].split('_')
                 assert(len(file_name_chunks) >= 5)
                 file_stem = '_'.join(file_name_chunks[:-2])
@@ -68,15 +89,23 @@ class SportsAndNews(torch.utils.data.Dataset):
 
         logger.info(f'{split} has {len(self.dataset)} items')
 
+        # self.check_lengths()
+
+    def check_lengths(self):
+        failed_vids = []
+        for i in range(len(self.dataset)):
+            video_id, path, start = self.dataset[i] 
+            rgb, audio, meta = get_video_and_audio(path, get_meta=True, max_clip_len_sec=self.max_clip_len_sec, start_sec=start)
+            if rgb == None:
+                failed_vids.append(self.dataset[i])
+        print(len(failed_vids), 'total videos failed')
+        json.dump(failed_vids, 'all_failed_vids.json')
+
     def __getitem__(self, index):
         video_id, path, start = self.dataset[index] 
 
         rgb, audio, meta = get_video_and_audio(path, get_meta=True, max_clip_len_sec=self.max_clip_len_sec, start_sec=start)
         
-        print('with max sec set to', self.max_clip_len_sec)
-        print('got video of shape', rgb.shape)
-        print('and audio of shape', audio.shape)
-
         # (Tv, 3, H, W) in [0, 225], (Ta, C) in [-1, 1]
         item = {
                 'video': rgb,
@@ -85,6 +114,7 @@ class SportsAndNews(torch.utils.data.Dataset):
                 'path': str(path), 
                 'targets': {}, 
                 'split': self.split,
+                'start':start,
         }
 
         # loading the fixed offsets. COMMENT THIS IF YOU DON'T HAVE A FILE YET
@@ -92,17 +122,10 @@ class SportsAndNews(torch.utils.data.Dataset):
             item['targets']['offset_sec'] = self.vid2offset_params[video_id]['offset_sec']
             item['targets']['v_start_i_sec'] = self.vid2offset_params[video_id]['v_start_i_sec']
 
-            # print('item has offset', item['targets']['offset_sec'], 'v_start_i_sec', item['targets']['v_start_i_sec'], 'video shape', item['video'].shape, 'audio shape', item['audio'].shape, 'and meta', item['meta'])
-
             if self.transforms is not None:
-                print('self.transforms', self.transforms)
                 item = self.transforms(item) # , skip_start_offset=True)
                 # TODO: Changed functionality of a transform to make this work; may need to change back for original SparseSync datasets to work
 
-        print('after transforms, video shape is', item['video'].shape)
-        print('after transforms, audio shape is', item['audio'].shape)
-
-        # print('Succeeded at least once!')
         return item
 
     def __len__(self):

@@ -284,10 +284,6 @@ def prepare_inputs(batch, device, phase=None):
     aud = batch['audio'].to(device)
     vid = batch['video'].to(device)
 
-    print('in prepare_inputs')
-    print('got vid of shape', vid.shape)
-    print('and aud of shape', aud.shape)
-
     # if `training.run_corrupted_val`
     if phase == 'valid_rand_aud':
         aud = (aud.max() - aud.min()) * torch.rand(aud.shape, dtype=aud.dtype, device=aud.device) + aud.min()

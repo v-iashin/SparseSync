@@ -291,8 +291,6 @@ class TemporalCropAndOffsetRandomFeasible(TemporalCropAndOffset):
         v_len_frames, C, H, W = vid.shape
         a_len_frames = aud.shape[0]
 
-        print('audio shape at start of forward', aud.shape)
-
         v_fps = int(item['meta']['video']['fps'][0])
         a_fps = int(item['meta']['audio']['framerate'][0])
 
@@ -361,18 +359,14 @@ class TemporalCropAndOffsetRandomFeasible(TemporalCropAndOffset):
             else:
                 raise Exception(f'{how_much_out} {item["path"]}')
 
-        print('audio shape right before check', aud.shape)
         assert v_start_i < v_end_i and a_start_i < a_end_i
-        assert aud.shape[0] >= a_end_i, f'{aud.shape} {a_end_i} {item["path"]}'
-        assert vid.shape[0] >= v_end_i, f'{vid.shape} {v_end_i} {item["path"]}'
+        assert aud.shape[0] >= a_end_i, f'{aud.shape} {a_end_i} {item["path"]} {item["start"]}'
+        assert vid.shape[0] >= v_end_i, f'{vid.shape} {v_end_i} {item["path"]} {item["start"]}'
 
         vid, aud = vid[v_start_i:v_end_i, :, :, :], aud[a_start_i:a_end_i]
 
         item['video'] = vid
         item['audio'] = aud
-
-        print('cropped video and audio to', self.crop_len_sec, 'seconds')
-        print('at', v_fps, 'frames per second that should be', v_fps*self.crop_len_sec, 'frames')
 
         assert item['video'].shape[0] == v_fps * self.crop_len_sec, f'{item["video"].shape} {item["path"]}'
         assert item['audio'].shape[0] == a_fps * self.crop_len_sec, f'{item["audio"].shape} {item["path"]}'
@@ -438,9 +432,6 @@ class FreezeFrames(torch.nn.Module):
         # pick active segment borders
         frames_v_is_active = sec2frames(self.sec_v_is_active, v_fps)
         start_frame = random.randint(0, v_len_frames-frames_v_is_active)
-        # start_frame = int(v_fps*1.5)
-        # print('start_frame', start_frame)
-        # print('ALWAYS THE SAME')
         end_frame = start_frame + frames_v_is_active
 
         # the inactive segment on the left is replaced with the last frame (or left empty)
@@ -481,9 +472,6 @@ class CorruptAudio(torch.nn.Module):
         a_len_frames = len(aud)
         frames_is_active = sec2frames(self.sec_is_active, a_fps)
         start_frame = random.randint(0, a_len_frames-frames_is_active)
-        # start_frame = int(a_fps * 1.5)
-        # print('start_frame', start_frame)
-        # print('ALWAYS THE SAME')
         end_frame = start_frame + frames_is_active
 
         # audio: 123456789 -> 123|A|45|B|6789 -> hbi45bxua (if corrupt_type = 'rand') or 000450000 (if 'mute')
