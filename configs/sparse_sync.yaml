@@ -8,7 +8,8 @@ model:
       target: model.modules.feature_extractors.ResNet18AudioFeatures
       params:
         # ckpt_path: null
-        ckpt_path: ./logs/feature_extractors/22-06-24T08-10-33/ResNetAudio-22-06-24T08-10-33.pt  # 5s 16000hz
+        ckpt_path: ./logs/feature_extractors/22-06-24T08-10-33/ResNetAudio-22-06-24T08-10-33.pt
+        # 5s 16000hz
     vfeat_extractor:
       is_trainable: True
       target: model.modules.feature_extractors.S3DVisualFeatures
@@ -272,3 +273,6 @@ logging:
   # patterns to ignore when backing up the code folder
   patterns_to_ignore: ['logs', '.git', '__pycache__', 'data', '*.pt', 'sbatch_logs', '*.mp4', '*.wav', '*.jpg', '*.gif']
   use_wandb: True
+
+
+# ckpt_path: ./logs/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt
