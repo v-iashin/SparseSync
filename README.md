@@ -92,7 +92,7 @@ docker run \
 ```
 or build it yourself
 ```bash
-docker build - < Dockerfile --tag specvqgan
+docker build - < Dockerfile --tag sparse_sync
 ```
 
 Try one of the examples:
