@@ -360,8 +360,10 @@ class TemporalCropAndOffsetRandomFeasible(TemporalCropAndOffset):
                 raise Exception(f'{how_much_out} {item["path"]}')
 
         assert v_start_i < v_end_i and a_start_i < a_end_i
-        assert aud.shape[0] >= a_end_i, f'{aud.shape} {a_end_i} {item["path"]} {item["start"]}'
-        assert vid.shape[0] >= v_end_i, f'{vid.shape} {v_end_i} {item["path"]} {item["start"]}'
+        # assert aud.shape[0] >= a_end_i, f'{aud.shape} {a_end_i} {item["path"]} {item["start"]}'
+        # assert vid.shape[0] >= v_end_i, f'{vid.shape} {v_end_i} {item["path"]} {item["start"]}'
+        if aud.shape[0] < a_end_i or vid.shape[0] < v_end_i:
+            raise Exception("Not enough samples or frames")
 
         vid, aud = vid[v_start_i:v_end_i, :, :, :], aud[a_start_i:a_end_i]
 

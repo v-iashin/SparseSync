@@ -76,7 +76,7 @@ def get_video_and_audio(path, get_meta=False, max_clip_len_sec=None, start_sec=N
     # (Ta) <- (Ca, Ta)
     audio = audio.mean(dim=0)
     if audio.shape[0] < 144000:
-        print('Audio shape only', audio.shape[0], 'for clip at', start_sec, 'in video', path)
+        # print('Audio shape only', audio.shape[0], 'for clip at', start_sec, 'in video', path)
         return None, None, None # To flag for debugging
     # FIXME: this is legacy format of `meta` as it used to be loaded by VideoReader.
     if meta == {}:
