@@ -85,8 +85,14 @@ def train(cfg):
                 prog_bar = tqdm(loaders[phase], f'{phase} ({epoch})', ncols=0)
                 for i, batch in enumerate(prog_bar):
                     # unfortunately, I had to use this to avoid GPU mem error on the second iteration
-                    if i == 1:
-                        torch.cuda.empty_cache()
+                    # if i == 0:
+                    #     torch.cuda.empty_cache()
+
+                    # Freeze weights on first epoch
+                    # Run valid before train
+                    # Run Valid every 200 or so steps
+                    # Add a valid-random phase for random offsets
+
                     iter_step = epoch * len(loaders[phase]) + i
                     # zero the parameter gradients
                     optimizer.zero_grad()

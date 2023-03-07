@@ -27,7 +27,7 @@ class SportsAndNews(torch.utils.data.Dataset):
                  vis_load_backend=None, # This doesn't appear to be used anywhere, so can be empty
                  size_ratio=None,
                  channel='CNN',
-                 distribution_type = 'normal'):
+                 distribution_type = 'uniform'):
         super().__init__()
         self.max_clip_len_sec = 5 # VGGSound has None, LRS has 11
         logger.info(f'During IO, the length of clips is limited to {self.max_clip_len_sec} sec')

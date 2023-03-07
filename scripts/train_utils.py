@@ -196,13 +196,14 @@ def get_lr_scheduler(cfg, optimizer):
     return lr_sched
 
 
+# Add resume option
 def load_ckpt(cfg, model_wo_ddp, optimizer, scaler, lr_scheduler):
     ckpt = torch.load(cfg.ckpt_path, map_location=torch.device('cpu'))
     ckpt_cfg = ckpt['args']
-    model_wo_ddp.load_state_dict(ckpt['model'])
-    optimizer.load_state_dict(ckpt['optimizer'])
-    scaler.load_state_dict(ckpt['scaler'])
-    lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
+    model_wo_ddp.load_state_dict(ckpt['model'], strict=False)
+    # optimizer.load_state_dict(ckpt['optimizer'])
+    # scaler.load_state_dict(ckpt['scaler'])
+    # lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
     start_epoch = ckpt['epoch']
     # restarting training counters if the ckpt is used to init weights rather than continuing training
     if cfg.training.finetune:

@@ -16,7 +16,7 @@ class SparseSync(torch.nn.Module):
         self, vis_pos_emb_module, aud_pos_emb_module, num_offset_cls,
         visual_block_shape, audio_block_shape, pre_norm_cfg, v_selector_cfg, a_selector_cfg, global_transformer_cfg,
         n_layer=12, n_head=8, n_embd=256, tok_pdrop=0., embd_pdrop=0., resid_pdrop=0., attn_pdrop=0.,
-        n_unmasked=0
+        n_unmasked=0, selector_mixing=True
     ):
         super().__init__()
         self.config = Config(
@@ -35,6 +35,12 @@ class SparseSync(torch.nn.Module):
         # selector transformers
         self.v_selector = instantiate_from_config(v_selector_cfg)  # FeatureSelectorTransformer
         self.a_selector = instantiate_from_config(a_selector_cfg)  # FeatureSelectorTransformer
+
+        # Add the Selector Mixing Transformer Here
+        self.selector_mixing = selector_mixing
+        if self.selector_mixing:
+            self.va_selector_mixer = FeatureSelectorMixingTransformer(self.v_selector.num_selectors, self.a_selector.num_selectors, v_selector_cfg, a_selector_cfg, n_embd, n_head)
+
         # aggregation transformer
         self.global_transformer = instantiate_from_config(global_transformer_cfg)  # GlobalTransformer
         # head
@@ -55,15 +61,40 @@ class SparseSync(torch.nn.Module):
         # making sure that both embeddings are normalized to the same base (can be configured as identity tho)
         vis, aud = self.pre_lnorm_vis(vis), self.pre_lnorm_aud(aud)
         # apply individual pos embeddings
-        vis, aud = self.vis_pos_emb(vis), self.aud_pos_emb(aud)
+        vis_context, aud_context = self.vis_pos_emb(vis), self.aud_pos_emb(aud)
         # narrow down the dimension with selectors
-        vis, aud = self.v_selector(vis), self.a_selector(aud)
+        vis, aud = self.v_selector(vis_context), self.a_selector(aud_context)
+
+        # mix selectors
+        if self.selector_mixing:
+            vis, aud = self.va_selector_mixer(vis, aud, vis_context, aud_context)
+        
         # aggregate infomation
         off_logits = self.global_transformer(vis, aud)
         # picking the first token which correspond to the `off_tok` as the prediction token
         off_logits = self.off_head(off_logits[:, 0, :])
         return off_logits
 
+class FeatureSelectorMixingTransformer(torch.nn.Module):
+
+    def __init__(self, vis_n_selectors, aud_n_selectors, v_selector_cfg, a_selector_cfg, n_embd, n_head):
+        super().__init__()
+        self.vis_n_selectors = vis_n_selectors
+        self.aud_n_selectors = aud_n_selectors
+        self.transformer = torch.nn.TransformerEncoder(
+            torch.nn.TransformerEncoderLayer(n_embd, n_head, 4 * n_embd),
+            3
+        )
+        # Try using all selectors for a & v
+        self.v_selector = instantiate_from_config(v_selector_cfg)
+        self.a_selector = instantiate_from_config(a_selector_cfg)
+
+    def forward(self, vis_selectors, aud_selectors, vis_context, aud_context):
+        all_selectors = torch.cat((vis_selectors, aud_selectors), dim=1)
+        mixed_selectors = self.transformer(all_selectors)
+        vis_selectors, aud_selectors = torch.split(mixed_selectors, [self.vis_n_selectors, self.aud_n_selectors], dim=1)
+        vis_selectors, aud_selectors = self.v_selector(vis_context, vis_selectors), self.a_selector(aud_context, aud_selectors)
+        return vis_selectors, aud_selectors
 
 class FeatureSelectorTransformer(torch.nn.Module):
 
@@ -88,13 +119,18 @@ class FeatureSelectorTransformer(torch.nn.Module):
         self.apply(init_weights)
         logger.info(f'Selector has {num_selectors} selectors')
 
-    def forward(self, context):
+    def forward(self, context, selectors=None):
         '''takes in a set of features (context): (B, Tv, H, W, Dv) or (B, F, Ta, Da)'''
         B, D = context.shape[0], context.shape[-1]
         # (B, T, D) <= flattening the context
         context = context.view(B, -1, D)
-        # broadcast the trainable selectors
-        selectors = einops.repeat(self.selectors, 's d -> b s d', b=B)
+
+        # get our selectors
+        if selectors is None:
+            selectors = self.selectors
+            # broadcast the trainable selectors (copy to every batch)
+            selectors = einops.repeat(selectors, 's d -> b s d', b=B)
+
         # maybe add pos emb
         selectors = selectors if self.pos_emb_cfg is None else self.selectors_pos_emb(selectors)
         # dropout
