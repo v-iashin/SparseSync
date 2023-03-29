@@ -60,7 +60,7 @@ def train(cfg):
     # loop over the train and validation multiple times (typical PT boilerplate)
     for epoch in range(start_epoch, num_epochs):
 
-        phases_to_run_on = ['train', 'valid']
+        phases_to_run_on = ['valid', 'train']
         if 'run_corrupted_val' not in cfg.training or cfg.training.run_corrupted_val:
             phases_to_run_on.extend(['valid_rand_aud', 'valid_rand_rgb', 'valid_perm_batch'])
 
@@ -127,6 +127,25 @@ def train(cfg):
                         verbose_iter_progress(logger, prog_bar, iter_step, iter_results, phase)
                         if phase == 'train':
                             verbose_lr(logger, prog_bar, iter_step, lr_scheduler.get_last_lr()[0])
+
+                            # if iter_step % 500 == 0:
+                            #     sub_running_results = dict(logits=[], targets=[], loss_total=0)
+                            #     for sub_valid_batch in tqdm(loaders['valid'], 'iter_valid ({epoch})',  ncols=0):
+                            #         sub_aud, sub_vid, sub_targets = prepare_inputs(sub_valid_batch, device, 'valid')
+                            #         with torch.set_grad_enabled(False):
+                            #             with torch.autocast('cuda', enabled=cfg.training.use_half_precision):
+                            #                 sub_loss, sub_logits = model(sub_vid, sub_aud, sub_targets)
+                            #         sub_iter_results = dict(
+                            #             logits=[sub_logits.detach().cpu()],
+                            #             targets=[sub_targets['offset_target'].cpu()],
+                            #             loss_total=sub_loss.item(),
+                            #         )
+                            #         for k in sub_running_results.keys():
+                            #             sub_running_results[k] += sub_iter_results[k]
+                            #     logger.log_iter_metrics(sub_running_results, epoch, 'valid-iter')
+
+
+
 
                     # doing it here instead of the dict() because we would like to verbose unscaled loss values
                     iter_results[f'loss_total'] /= len(loaders[phase])

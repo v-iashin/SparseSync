@@ -32,6 +32,10 @@ class SportsAndNews(torch.utils.data.Dataset):
         self.max_clip_len_sec = 5 # VGGSound has None, LRS has 11
         logger.info(f'During IO, the length of clips is limited to {self.max_clip_len_sec} sec')
         self.split = split
+        self.use_random_offset = False
+        if split == 'valid-random':
+            self.use_random_offset = True
+            self.split = 'valid'
         self.vids_dir = vids_dir
         self.transforms = transforms
         self.splits_path = splits_path
@@ -50,7 +54,7 @@ class SportsAndNews(torch.utils.data.Dataset):
             data_csv = open(f'data/sports_and_news_{distribution_type}.train.csv').readlines()
             offset_path = f'data/sports_and_news_{distribution_type}.train.json'
             # skip_ids = [line.strip() for line in open(f'data/sports_and_news_{distribution_type}.{split}.skip_id_list.txt')]
-        elif split == 'valid':
+        elif split in ('valid', 'valid-random'):
             data_csv = open(f'data/sports_and_news_{distribution_type}.test.csv').readlines()
             offset_path = f'data/sports_and_news_{distribution_type}.test.json'
             # skip_ids = [line.strip() for line in open(f'data/sports_and_news_{distribution_type}.{split}.skip_id_list.txt')]
@@ -138,27 +142,27 @@ class SportsAndNews(torch.utils.data.Dataset):
         }
 
         # loading the fixed offsets. COMMENT THIS IF YOU DON'T HAVE A FILE YET
-        if self.load_fixed_offsets_on_test and self.split in ['valid', 'test']:
+        if self.load_fixed_offsets_on_test and self.split in ['valid', 'test'] and not self.use_random_offset:
             item['targets']['offset_sec'] = self.vid2offset_params[video_id]['offset_sec']
             item['targets']['v_start_i_sec'] = self.vid2offset_params[video_id]['v_start_i_sec']
             if self.transforms is not None:
                 try:
                     item = self.transforms(item) # , skip_start_offset=True)
                 except:
-                    print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
-                    with open(f"sports_and_news_{self.distribution_type}.{self.split}.skip_id_list.txt", "a+") as fd:
-                        if video_id not in set([line.strip for line in fd]):
-                            fd.write(f"{video_id}\n")
+                    # print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
+                    # with open(f"sports_and_news_{self.distribution_type}.{self.split}.skip_id_list.txt", "a+") as fd:
+                    #     if video_id not in set([line.strip for line in fd]):
+                    #         fd.write(f"{video_id}\n")
                     return self[index-1]
                 
-        elif self.split == 'train':
+        elif self.split in ('train', 'valid'):
             item['targets']['offset_sec'] = (random.random()*4)-2 # Random offset every time -> +/- 2 seconds
             item['targets']['v_start_i_sec'] = (random.random()*296) + 2 # random start time (2,298)
             if self.transforms is not None:
                 try:
                     item = self.transforms(item)
                 except:
-                    print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
+                    # print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
                     return self[index-1] # Just retrain on previous data
 
         return item

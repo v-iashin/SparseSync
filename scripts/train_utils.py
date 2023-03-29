@@ -94,6 +94,9 @@ def get_datasets(cfg, transforms):
         'valid': DatasetClass('valid', vids_path, transforms['test'],
                               load_fixed_offsets_on_test=load_fixed_offsets_on_test,
                               vis_load_backend=vis_load_backend, size_ratio=size_ratio),
+        'valid-random': DatasetClass('valid-random', vids_path, transforms['test'],
+                              load_fixed_offsets_on_test=load_fixed_offsets_on_test,
+                              vis_load_backend=vis_load_backend, size_ratio=size_ratio),
         'test': DatasetClass('test', vids_path, transforms['test'],
                              load_fixed_offsets_on_test=load_fixed_offsets_on_test,
                              vis_load_backend=vis_load_backend),
@@ -111,6 +114,7 @@ def get_batch_sizes(cfg, num_gpus):
 def get_loaders(cfg, datasets, batch_sizes):
     train_sampler = DistributedSampler(datasets['train'], shuffle=True) if dist.is_initialized() else None
     valid_sampler = DistributedSampler(datasets['valid'], shuffle=False) if dist.is_initialized() else None
+    valid_random_sampler = DistributedSampler(datasets['valid'], shuffle=False) if dist.is_initialized() else None
     test_sampler = DistributedSampler(datasets['test'], shuffle=False) if dist.is_initialized() else None
     # what is the portion of the valid dataset to used for the `run_corrupted_valid` (turned off by default)
     subset_size = 0.2
@@ -125,6 +129,9 @@ def get_loaders(cfg, datasets, batch_sizes):
         'valid': DataLoader(
             datasets['valid'], batch_sizes['test'], shuffle=False,
             sampler=valid_sampler, num_workers=cfg.training.num_workers, pin_memory=True),
+        'valid-random': DataLoader(
+            datasets['valid-random'], batch_sizes['test'], shuffle=False,
+            sampler=valid_random_sampler, num_workers=cfg.training.num_workers, pin_memory=True),
         'test': DataLoader(
             datasets['test'], batch_sizes['test'], shuffle=False,
             sampler=test_sampler, num_workers=cfg.training.num_workers, pin_memory=True),
