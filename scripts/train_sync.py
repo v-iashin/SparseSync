@@ -43,6 +43,9 @@ def train(cfg):
 
     logger.log_param_num(global_rank, model)
 
+    # Add DataParallel for multiple GPUS
+    model = torch.nn.DataParallel(model)
+
     early_stopper = EarlyStopper(cfg.training.patience, cfg.training.to_max_metric, cfg.training.metric_name)
 
     # the scaller for the loss. Helps to avoid precision underflow during half prec training
@@ -114,13 +117,14 @@ def train(cfg):
                             loss, logits = model(vid, aud, targets)
 
                     if phase == 'train':
-                        make_backward_and_optim_step(cfg, loss, model, optimizer, scaler, lr_scheduler)
+                        make_backward_and_optim_step(cfg, loss.mean(), model, optimizer, scaler, lr_scheduler)
 
                     # gathering results in one place to iterate on this later
                     iter_results = dict(
                         logits=[logits.detach().cpu()],
                         targets=[targets['offset_target'].cpu()],
-                        loss_total=loss.item(),
+                        # loss_total=loss.item(),
+                        loss_total=loss.mean(),
                     )
 
                     if is_master(global_rank):
