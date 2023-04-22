@@ -26,7 +26,7 @@ class SportsAndNews(torch.utils.data.Dataset):
                  load_fixed_offsets_on_test=True,
                  vis_load_backend=None, # This doesn't appear to be used anywhere, so can be empty
                  size_ratio=None,
-                 channel='CNN',
+                 channel=None,
                  distribution_type = 'uniform'):
         super().__init__()
         self.max_clip_len_sec = 5 # VGGSound has None, LRS has 11
@@ -90,7 +90,7 @@ class SportsAndNews(torch.utils.data.Dataset):
                 assert(len(file_name_chunks) >= 5)
                 file_stem = '_'.join(file_name_chunks[:-2])
                 video_folder = '_'.join(file_name_chunks[:-4])
-                full_path = '/saltpool0/data/datasets/avsync/data/v5/videos_at_25fps-encode_script/' + video_folder + '/' + file_stem + '.mkv'
+                full_path = '/data3/scratch/videos_at_25fps-encode_script/' + video_folder + '/' + file_stem + '.mkv'
                 # full_path = '/saltpool0/data/datasets/avsync/data/v5/videos_at_25fps-encode_script/rOn7uGVVf1I/rOn7uGVVf1I_3000_3300.mkv'
                 video_id = line.split(',')[0]
                 tup = (video_id, full_path, float(line.split(',')[1]))

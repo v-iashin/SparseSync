@@ -16,14 +16,14 @@ class SparseSync(torch.nn.Module):
         self, vis_pos_emb_module, aud_pos_emb_module, num_offset_cls,
         visual_block_shape, audio_block_shape, pre_norm_cfg, v_selector_cfg, a_selector_cfg, global_transformer_cfg,
         n_layer=12, n_head=8, n_embd=256, tok_pdrop=0., embd_pdrop=0., resid_pdrop=0., attn_pdrop=0.,
-        n_unmasked=0, selector_mixing=True
+        n_unmasked=0, selector_mixing=True, ablate_mixer=False, ablate_selector=False
     ):
         super().__init__()
         self.config = Config(
             num_offset_cls=num_offset_cls, audio_block_shape=audio_block_shape,
             visual_block_shape=visual_block_shape, embd_pdrop=embd_pdrop, resid_pdrop=resid_pdrop,
             attn_pdrop=attn_pdrop, tok_pdrop=tok_pdrop, n_layer=n_layer, n_head=n_head, n_embd=n_embd,
-            n_unmasked=n_unmasked
+            n_unmasked=n_unmasked, ablate_mixer=False, ablate_selector=False
         )
         super().__init__()
         # input norm
@@ -81,28 +81,34 @@ class FeatureSelectorMixingTransformer(torch.nn.Module):
         super().__init__()
         self.vis_n_selectors = vis_n_selectors
         self.aud_n_selectors = aud_n_selectors
-        self.transformer = torch.nn.TransformerEncoder(
-            torch.nn.TransformerEncoderLayer(n_embd, n_head, 4 * n_embd),
-            3
-        )
-        # Try using all selectors for a & v
-        self.v_selector = instantiate_from_config(v_selector_cfg)
-        self.a_selector = instantiate_from_config(a_selector_cfg)
+        assert(v_selector_cfg.params.ablate_mixer == a_selector_cfg.params.ablate_mixer)
+        assert(v_selector_cfg.params.ablate_selector == a_selector_cfg.params.ablate_selector)
+        self.use_mixer = not v_selector_cfg.params.ablate_mixer
+        self.use_selector = not v_selector_cfg.params.ablate_selector
+        if self.use_mixer:
+            self.transformer = torch.nn.TransformerEncoder(
+                torch.nn.TransformerEncoderLayer(n_embd, n_head, 4 * n_embd), 3)
+        if self.use_selector:
+            # Try using all selectors for a & v
+            self.v_selector = instantiate_from_config(v_selector_cfg)
+            self.a_selector = instantiate_from_config(a_selector_cfg)
 
     def forward(self, vis_selectors, aud_selectors, vis_context, aud_context):
-        all_selectors = torch.cat((vis_selectors, aud_selectors), dim=1)
-        mixed_selectors = self.transformer(all_selectors)
-        vis_selectors, aud_selectors = torch.split(mixed_selectors, [self.vis_n_selectors, self.aud_n_selectors], dim=1)
-        vis_selectors, aud_selectors = self.v_selector(vis_context, vis_selectors), self.a_selector(aud_context, aud_selectors)
+        if self.use_mixer:
+            all_selectors = torch.cat((vis_selectors, aud_selectors), dim=1)
+            mixed_selectors = self.transformer(all_selectors)
+            vis_selectors, aud_selectors = torch.split(mixed_selectors, [self.vis_n_selectors, self.aud_n_selectors], dim=1)
+        if self.use_selector:
+            vis_selectors, aud_selectors = self.v_selector(vis_context, vis_selectors), self.a_selector(aud_context, aud_selectors)
         return vis_selectors, aud_selectors
 
 class FeatureSelectorTransformer(torch.nn.Module):
 
-    def __init__(self, num_selectors, n_layer, n_head, n_embd, embd_pdrop, resid_pdrop, attn_pdrop,
+    def __init__(self, num_selectors, n_layer, n_head, n_embd, embd_pdrop, resid_pdrop, attn_pdrop, ablate_mixer, ablate_selector,
                  pos_emb_cfg=None) -> None:
         super().__init__()
         config = Config(embd_pdrop=embd_pdrop, resid_pdrop=resid_pdrop, attn_pdrop=attn_pdrop,
-                        n_layer=n_layer, n_head=n_head, n_embd=n_embd)
+                        n_layer=n_layer, n_head=n_head, n_embd=n_embd, ablate_mixer=ablate_mixer, ablate_selector=ablate_selector)
         self.num_selectors = num_selectors
         self.selectors = torch.nn.Parameter(torch.randn(num_selectors, n_embd))
 

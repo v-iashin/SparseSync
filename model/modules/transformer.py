@@ -236,13 +236,13 @@ class Transformer(nn.Module):
     def __init__(self, vis_pos_emb_module, aud_pos_emb_module, num_offset_cls,
                  visual_block_shape, audio_block_shape, pre_norm_cfg,
                  n_layer=12, n_head=8, n_embd=256, tok_pdrop=0., embd_pdrop=0., resid_pdrop=0., attn_pdrop=0.,
-                 n_unmasked=0):
+                 n_unmasked=0,ablate_mixer=False,ablate_selector=False):
         super().__init__()
         config = Config(num_offset_cls=num_offset_cls,
                         audio_block_shape=audio_block_shape, visual_block_shape=visual_block_shape,
                         embd_pdrop=embd_pdrop, resid_pdrop=resid_pdrop, attn_pdrop=attn_pdrop,
                         tok_pdrop=tok_pdrop, n_layer=n_layer, n_head=n_head, n_embd=n_embd,
-                        n_unmasked=n_unmasked)
+                        n_unmasked=n_unmasked,ablate_mixer=ablate_mixer,ablate_selector=ablate_selector)
         self.config = config
         # input embedding stem
         self.OFF_tok = nn.Parameter(torch.randn(1, 1, n_embd))

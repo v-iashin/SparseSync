@@ -44,6 +44,8 @@ model:
         embd_pdrop: 0.1
         resid_pdrop: 0.1
         attn_pdrop: 0.1
+        ablate_mixer: False
+        ablate_selector: False
         vis_pos_emb_module:
           target: model.modules.transformer.PositionEmbeddingLearnedVisual
           params:
@@ -64,6 +66,8 @@ model:
             embd_pdrop: ${model.params.transformer.params.embd_pdrop}
             resid_pdrop: ${model.params.transformer.params.resid_pdrop}
             attn_pdrop: ${model.params.transformer.params.attn_pdrop}
+            ablate_mixer: ${model.params.transformer.params.ablate_mixer}
+            ablate_selector: ${model.params.transformer.params.ablate_selector}
             pos_emb_cfg:
               # target: model.modules.feature_selector.DoNothing
               target: model.modules.feature_selector.PositionEmbeddingSelectors
@@ -80,6 +84,8 @@ model:
             embd_pdrop: ${model.params.transformer.params.embd_pdrop}
             resid_pdrop: ${model.params.transformer.params.resid_pdrop}
             attn_pdrop: ${model.params.transformer.params.attn_pdrop}
+            ablate_mixer: ${model.params.transformer.params.ablate_mixer}
+            ablate_selector: ${model.params.transformer.params.ablate_selector}
             pos_emb_cfg: ${model.params.transformer.params.a_selector_cfg.params.pos_emb_cfg}
         global_transformer_cfg:
           # target: model.modules.feature_selector.GlobalMLP
@@ -95,7 +101,7 @@ model:
 
 training:
   base_learning_rate: 5e-6
-  base_batch_size: 10
+  base_batch_size: 32
   num_workers: 8
   num_epochs: 10000
   patience: 140
@@ -107,14 +113,16 @@ training:
   seed: 1337
   run_test_only: False
   resume: False
-  finetune: False
+  finetune: True
   detect_anomaly: False
   dist_backend: 'nccl'
   max_clip_norm: 1
   run_corrupted_val: False
   lr_scheduler:
-    name: 'constant_with_warmup'  # 'constant' 'constant_with_warmup'
-    warmup: 1000 # iterations to recover from base_learning_rate / 100
+    name: 'warmup_constant_decay' # 'constant_with_warmup'  # 'constant' 'constant_with_warmup'
+    warmup: 10 # iterations to recover from base_learning_rate / 100
+    constant: 10
+    remaining: 30
   optimizer:
     name: adam # adamw, adam or sgd
     betas: [0.9, 0.999]
@@ -124,24 +132,24 @@ training:
 data:
   crop_len_sec: 5
   max_off_sec: 2
-  vids_path: 'PLACEHOLDER' # something that ends with 'CODEC_video_XXfps_YYYside_ZZZZZhz' or '..._25fps_...'
+  vids_path: '/data3/scratch/videos_at_25_fps-encode_script/' # 'PLACEHOLDER' # something that ends with 'CODEC_video_XXfps_YYYside_ZZZZZhz' or '..._25fps_...'
   size_before_crop: 256  # video resolution -> size_before_crop resolution -> input_size (crop resolution)
   input_size: 224
   do_offset: True
-  p_color_jitter: 0.0  # ignored if 0 # ignored if 0
-  p_gray_scale: 0.0  # ignored if 0
-  sometimes_upscale_p: 0.0  # how often to apply the smaller crop and upscale? if 0.0 or null, works as RGBSpatialCrop
+  p_color_jitter: 0.2  # ignored if 0 # ignored if 0
+  p_gray_scale: 0.2  # ignored if 0
+  sometimes_upscale_p: 0.5  # how often to apply the smaller crop and upscale? if 0.0 or null, works as RGBSpatialCrop
   is_spatial_crop_random: True  # if the crop transform should be random or just center crop should be used
   audio_jitter_sec: 0.05
   p_horizontal_flip: 0.5
-  p_audio_aug: 0.0
+  p_audio_aug: 0.2
   to_freeze_frames: False
   to_corrupt_audio: False
   corrupt_type: 'mute'  # 'mute' 'rand'
   active_min_overlap_sec: 1
   # changing `dataset` arguments here won't affect the init call. See train_utils.get_datasets
   dataset:
-    target: dataset.vggsound.VGGSoundSparsePicked
+    target: dataset.sports_and_news.SportsAndNews # dataset.vggsound.VGGSoundSparsePicked
     params:
       load_fixed_offsets_on_test: True
       vis_load_backend: 'read_video'
@@ -275,5 +283,5 @@ logging:
   use_wandb: True
 
 
-# ckpt_path: ./logs/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt
+ckpt_path: ./logs/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt
 # ckpt_path: ./logs/sync_models/23-01-25T21-57-02/23-01-25T21-57-02.pt
