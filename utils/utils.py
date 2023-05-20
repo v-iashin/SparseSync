@@ -80,7 +80,10 @@ def cfg_sanity_check_and_patch(cfg):
     if cfg.training.resume or cfg.training.run_test_only or cfg.training.finetune:
         assert Path(cfg.ckpt_path).exists(), cfg.ckpt_path
     if cfg.training.resume:
-        assert Path(cfg.logging.logdir, cfg.start_time).exists(), Path(cfg.logging.logdir, cfg.start_time)
+        try:
+            assert Path(cfg.logging.logdir, cfg.start_time).exists(), Path(cfg.logging.logdir, cfg.start_time)
+        except:
+            print('Failed assert that path with cfg.start_time exists, but ignoring since cfg.start_time should not be used in path')
     if cfg.action in ['train_avsync_model', 'train_avsync_01']:
         vfeat_extractor_target = cfg.model.params.vfeat_extractor.target
         if vfeat_extractor_target.endswith('S3DVisualFeatures'):

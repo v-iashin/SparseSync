@@ -201,9 +201,9 @@ def get_lr_scheduler(cfg, optimizer):
     elif cfg.training.lr_scheduler.name == 'constant':
         lr_sched = lr_scheduler.ConstantLR(optimizer, factor=1)
     elif cfg.training.lr_scheduler.name == 'warmup_constant_decay':
-        warmup = cfg.training.lr_scheduler.warmup * 860 # steps per epoch
-        constant = cfg.training.lr_scheduler.constant * 860
-        remaining = cfg.training.lr_scheduler.remaining * 860
+        warmup = cfg.training.lr_scheduler.warmup# * 860 # steps per epoch
+        constant = cfg.training.lr_scheduler.constant# * 860
+        remaining = cfg.training.lr_scheduler.remaining# * 860
         lr_sched = lr_scheduler.SequentialLR(optimizer, schedulers=[
             lr_scheduler.LinearLR(optimizer, start_factor=1/100, total_iters=warmup),
             lr_scheduler.ConstantLR(optimizer, factor=1, total_iters=constant),

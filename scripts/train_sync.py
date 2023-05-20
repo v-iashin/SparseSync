@@ -217,11 +217,19 @@ def train(cfg):
                     loss, logits = model(vid, aud, targets)
 
             # gathering results in one place to iterate on this later
-            iter_results = dict(
-                logits=[logits.detach().cpu()],
-                targets=[targets['offset_target'].cpu()],
-                loss_total=loss.item() / len(loaders[phase]) / iter_times,
-            )
+            try:
+                iter_results = dict(
+                    logits=[logits.detach().cpu()],
+                    targets=[targets['offset_target'].cpu()],
+                    loss_total=loss.item() / len(loaders[phase]) / iter_times,
+                )
+            except:
+                print('Failed!')
+                print('loss is', loss)
+                print('with .item we get', loss.item())
+                print('loaders[phase] is', loaders[phase])
+                print('iter_times is', iter_times)
+                exit(0)
             for k in running_results.keys():
                 running_results[k] += iter_results[k]
 

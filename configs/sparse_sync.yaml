@@ -100,8 +100,8 @@ model:
             attn_pdrop: ${model.params.transformer.params.attn_pdrop}
 
 training:
-  base_learning_rate: 5e-6
-  base_batch_size: 32
+  base_learning_rate: 5e-5
+  base_batch_size: 64
   num_workers: 8
   num_epochs: 10000
   patience: 140
@@ -120,9 +120,9 @@ training:
   run_corrupted_val: False
   lr_scheduler:
     name: 'warmup_constant_decay' # 'constant_with_warmup'  # 'constant' 'constant_with_warmup'
-    warmup: 10 # iterations to recover from base_learning_rate / 100
-    constant: 10
-    remaining: 30
+    warmup: 5000 # iterations to recover from base_learning_rate / 100
+    constant: 15000
+    remaining: 25000
   optimizer:
     name: adam # adamw, adam or sgd
     betas: [0.9, 0.999]

@@ -26,7 +26,7 @@ class SportsAndNews(torch.utils.data.Dataset):
                  load_fixed_offsets_on_test=True,
                  vis_load_backend=None, # This doesn't appear to be used anywhere, so can be empty
                  size_ratio=None,
-                 channel=None,
+                 channel='golfshome',
                  distribution_type = 'uniform'):
         super().__init__()
         self.max_clip_len_sec = 5 # VGGSound has None, LRS has 11
@@ -51,8 +51,8 @@ class SportsAndNews(torch.utils.data.Dataset):
             # skip_ids = [line.strip() for line in open(f'data/sports_and_news_{distribution_type}.{split}.skip_id_list.txt')]
             # skip_ids = [line.strip() for line in open('data/sports_and_news_normal.evaluation.skip_id_list.txt')]
         elif split == 'train':
-            data_csv = open(f'data/sports_and_news_{distribution_type}.train.csv').readlines()
-            offset_path = f'data/sports_and_news_{distribution_type}.train.json'
+            data_csv = open(f'data/sports_and_news_{distribution_type}.test.csv').readlines() # TODO: switch back to train after running tests
+            offset_path = f'data/sports_and_news_{distribution_type}.test.json' # TODO: switch back to train after running tests
             # skip_ids = [line.strip() for line in open(f'data/sports_and_news_{distribution_type}.{split}.skip_id_list.txt')]
         elif split in ('valid', 'valid-random'):
             data_csv = open(f'data/sports_and_news_{distribution_type}.test.csv').readlines()
@@ -125,13 +125,13 @@ class SportsAndNews(torch.utils.data.Dataset):
 
 
     def __getitem__(self, index):
-        video_id, path, start = self.dataset[index] 
+        try:
+            video_id, path, start = self.dataset[index] 
 
-        rgb, audio, meta = get_video_and_audio(path, get_meta=True, max_clip_len_sec=self.max_clip_len_sec, start_sec=start)
+            rgb, audio, meta = get_video_and_audio(path, get_meta=True, max_clip_len_sec=self.max_clip_len_sec, start_sec=start)
         
-
-        # (Tv, 3, H, W) in [0, 225], (Ta, C) in [-1, 1]
-        item = {
+            # (Tv, 3, H, W) in [0, 225], (Ta, C) in [-1, 1]
+            item = {
                 'video': rgb,
                 'audio': audio,
                 'meta': meta,
@@ -139,33 +139,39 @@ class SportsAndNews(torch.utils.data.Dataset):
                 'targets': {}, 
                 'split': self.split,
                 'start':start,
-        }
+            }
 
-        # loading the fixed offsets. COMMENT THIS IF YOU DON'T HAVE A FILE YET
-        if self.load_fixed_offsets_on_test and self.split in ['valid', 'test'] and not self.use_random_offset:
-            item['targets']['offset_sec'] = self.vid2offset_params[video_id]['offset_sec']
-            item['targets']['v_start_i_sec'] = self.vid2offset_params[video_id]['v_start_i_sec']
-            if self.transforms is not None:
-                try:
-                    item = self.transforms(item) # , skip_start_offset=True)
-                except:
-                    # print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
-                    # with open(f"sports_and_news_{self.distribution_type}.{self.split}.skip_id_list.txt", "a+") as fd:
-                    #     if video_id not in set([line.strip for line in fd]):
-                    #         fd.write(f"{video_id}\n")
-                    return self[index-1]
+            # loading the fixed offsets. COMMENT THIS IF YOU DON'T HAVE A FILE YET
+            if self.load_fixed_offsets_on_test and self.split in ['valid', 'test'] and not self.use_random_offset:
+                item['targets']['offset_sec'] = self.vid2offset_params[video_id]['offset_sec']
+                item['targets']['v_start_i_sec'] = self.vid2offset_params[video_id]['v_start_i_sec']
+                if self.transforms is not None:
+                    try:
+                        item = self.transforms(item) # , skip_start_offset=True)
+                    except:
+                        print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
+                        # with open(f"sports_and_news_{self.distribution_type}.{self.split}.skip_id_list.txt", "a+") as fd:
+                        #     if video_id not in set([line.strip for line in fd]):
+                        #         fd.write(f"{video_id}\n")
+                        return self[index-1]
                 
-        elif self.split in ('train', 'valid'):
-            item['targets']['offset_sec'] = (random.random()*4)-2 # Random offset every time -> +/- 2 seconds
-            item['targets']['v_start_i_sec'] = (random.random()*296) + 2 # random start time (2,298)
-            if self.transforms is not None:
-                try:
-                    item = self.transforms(item)
-                except:
-                    # print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
-                    return self[index-1] # Just retrain on previous data
+            elif self.split in ('train', 'valid'):
+                item['targets']['offset_sec'] = (random.random()*4)-2 # Random offset every time -> +/- 2 seconds
+                item['targets']['v_start_i_sec'] = (random.random()*296) + 2 # random start time (2,298)
+                if self.transforms is not None:
+                    try:
+                        item = self.transforms(item)
+                    except:
+                        print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
+                        return self[index-1] # Just retrain on previous data
 
-        return item
+            # Decrease sizes
+            item['video'] = item['video'].half()
+            item['audio'] = item['audio'].half()
+            return item
+        except:
+            print('Failed on video', self.dataset[index][0], 'for a reason other than the transforms')
+            return self[index-1]
 
     def __len__(self):
         return len(self.dataset)

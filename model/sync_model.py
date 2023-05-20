@@ -30,7 +30,6 @@ class AVSyncModel(torch.nn.Module):
         Returns:
             tuple(Tensor, Tensor), tuple(Tensor, Tensor), Tensor: loss values, logits
         '''
-
         vis = self.vfeat_extractor(vis)
         aud = self.afeat_extractor(aud)
 
