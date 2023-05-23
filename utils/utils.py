@@ -24,9 +24,13 @@ FNAME2LINK = {
     # ft VGGSound-Sparse
     '22-07-28T15-49-45.pt': f'{PARENT_LINK}/sync/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt',
     'cfg-22-07-28T15-49-45.yaml': f'{PARENT_LINK}/sync/sync_models/22-07-28T15-49-45/cfg-22-07-28T15-49-45.yaml',
+    '22-08-13T21-55-03.pt': f'{PARENT_LINK}/sync/sync_models/22-08-13T21-55-03/22-08-13T21-55-03.pt',
+    'cfg-22-08-13T21-55-03.yaml': f'{PARENT_LINK}/sync/sync_models/22-08-13T21-55-03/cfg-22-08-13T21-55-03.yaml',
     # only pt on LRS3
     '22-07-13T22-25-49.pt': f'{PARENT_LINK}/sync/sync_models/22-07-13T22-25-49/22-07-13T22-25-49.pt',
     'cfg-22-07-13T22-25-49.yaml': f'{PARENT_LINK}/sync/sync_models/22-07-13T22-25-49/cfg-22-07-13T22-25-49.yaml',
+    '22-07-18T08-00-00.pt': f'{PARENT_LINK}/sync/sync_models/22-07-18T08-00-00/22-07-18T08-00-00.pt',
+    'cfg-22-07-18T08-00-00.yaml': f'{PARENT_LINK}/sync/sync_models/22-07-18T08-00-00/cfg-22-07-18T08-00-00.yaml',
 }
 
 def check_if_file_exists_else_download(path, chunk_size=1024):
