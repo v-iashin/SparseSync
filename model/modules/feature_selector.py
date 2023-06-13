@@ -92,6 +92,7 @@ class FeatureSelectorMixingTransformer(torch.nn.Module):
             # Try using all selectors for a & v
             self.v_selector = instantiate_from_config(v_selector_cfg)
             self.a_selector = instantiate_from_config(a_selector_cfg)
+        self.apply(init_weights)
 
     def forward(self, vis_selectors, aud_selectors, vis_context, aud_context):
         if self.use_mixer:

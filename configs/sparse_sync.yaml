@@ -100,8 +100,9 @@ model:
             attn_pdrop: ${model.params.transformer.params.attn_pdrop}
 
 training:
+  freeze_first: 1
   base_learning_rate: 5e-5
-  base_batch_size: 64
+  base_batch_size: 10
   num_workers: 8
   num_epochs: 10000
   patience: 140
@@ -132,7 +133,7 @@ training:
 data:
   crop_len_sec: 5
   max_off_sec: 2
-  vids_path: '/data3/scratch/videos_at_25_fps-encode_script/' # 'PLACEHOLDER' # something that ends with 'CODEC_video_XXfps_YYYside_ZZZZZhz' or '..._25fps_...'
+  vids_path: '/saltpool0/data/datasets/avsync/data/v5/videos_at_25_fps-encode_script/' # 'PLACEHOLDER' # something that ends with 'CODEC_video_XXfps_YYYside_ZZZZZhz' or '..._25fps_...'
   size_before_crop: 256  # video resolution -> size_before_crop resolution -> input_size (crop resolution)
   input_size: 224
   do_offset: True

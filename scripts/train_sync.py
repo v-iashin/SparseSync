@@ -45,6 +45,7 @@ def train(cfg):
 
     # Add DataParallel for multiple GPUS
     model = torch.nn.DataParallel(model)
+    model_only_params = [] # Written over in loading checkpoint; used to freeze loaded params while training new ones if freeze_first > 0
 
     early_stopper = EarlyStopper(cfg.training.patience, cfg.training.to_max_metric, cfg.training.metric_name)
 
@@ -53,7 +54,7 @@ def train(cfg):
 
     # this chunk has a complicate logic but it simply loads pre-trained ckpt during finetuning/resuming
     if cfg.training.run_test_only or cfg.training.resume or cfg.training.finetune:
-        start_epoch, early_stopper.best_metric = load_ckpt(cfg, model_without_ddp, optimizer, scaler, lr_scheduler)
+        start_epoch, early_stopper.best_metric, model_only_params = load_ckpt(cfg, model_without_ddp, optimizer, scaler, lr_scheduler)
     else:
         start_epoch = 0
 
@@ -69,7 +70,7 @@ def train(cfg):
 
         for phase in phases_to_run_on:
             # does model.eval() or .train() on appropriate submodules
-            toggle_mode(cfg, model, phase)
+            toggle_mode(cfg, model, phase, epoch, model_only_params)
 
             # init runnining results
             running_results = dict(logits=[], targets=[], loss_total=0)
@@ -189,7 +190,7 @@ def train(cfg):
     phase = 'test'
     cfg.training.finetune = False
     # loading the best model
-    ckpt_epoch, best_metric_val = load_ckpt(cfg, model_without_ddp, optimizer, scaler, lr_scheduler)
+    ckpt_epoch, best_metric_val, model_only_params = load_ckpt(cfg, model_without_ddp, optimizer, scaler, lr_scheduler)
     if is_master(global_rank):
         logger.print_logger.info(f'Loading the best model from {cfg.ckpt_path}')
         logger.print_logger.info(f'Best metric: {best_metric_val}')

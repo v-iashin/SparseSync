@@ -216,7 +216,22 @@ def get_lr_scheduler(cfg, optimizer):
 def load_ckpt(cfg, model_wo_ddp, optimizer, scaler, lr_scheduler):
     ckpt = torch.load(cfg.ckpt_path, map_location=torch.device('cpu'))
     ckpt_cfg = ckpt['args']
-    model_wo_ddp.load_state_dict(ckpt['model'], strict=False)
+    try:
+        model_wo_ddp.load_state_dict(ckpt['model'])
+        model_only_params = [] # Perfect match
+    except:
+        d1 = ckpt['model']
+        d2 = model_wo_ddp.state_dict()
+        ckpt_only_params = []
+        model_only_params = []
+        for k in d1:
+            if k not in d2:
+                ckpt_only_params.append(k)
+        for k in d2:
+            if k not in d1:
+                model_only_params.append(k)
+        assert(len(ckpt_only_params) == 0)
+        model_wo_ddp.load_state_dict(ckpt['model'], strict=False)
     # optimizer.load_state_dict(ckpt['optimizer'])
     # scaler.load_state_dict(ckpt['scaler'])
     # lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
@@ -236,7 +251,7 @@ def load_ckpt(cfg, model_wo_ddp, optimizer, scaler, lr_scheduler):
     # a bit ugly but it patches checkpoints produced by the 'old' code
     metrics = ckpt['metrics']
     metrics = metrics.get('off', metrics)
-    return start_epoch, metrics[cfg.training.metric_name]
+    return start_epoch, metrics[cfg.training.metric_name], model_only_params
 
 
 class EarlyStopper(object):
@@ -277,9 +292,34 @@ class EarlyStopper(object):
         return self.best_metric < new_metric_val if self.to_max else self.best_metric > new_metric_val
 
 
-def toggle_mode(cfg, model, phase):
+def toggle_mode(cfg, model, phase, epoch, model_only_params):
     if phase == 'train':
         model.train()
+        if cfg.training.freeze_first > epoch: # Only freeze for the first few epochs
+            for n,p in model.named_parameters():
+                if (n in model_only_params) or (n[7:] in model_only_params): # First 7 chars are 'module.' if dist.is_initialized()
+                    p.requires_grad = True # Parameters not loaded from the ckpt should be trained
+                else:
+                    p.requires_grad = False # Parameters loaded from the ckpt are frozen
+        elif cfg.training.freeze_first == epoch:
+            # First epoch back, so need to un-freeze everything
+            for n,p in model.named_parameters():
+                p.requires_grad = True
+            # Re-freeze extractors if not trainable
+            if cfg.model.params.vfeat_extractor.is_trainable is False:
+                if dist.is_initialized():
+                    for params in model.module.vfeat_extractor.parameters():
+                        params.requires_grad = False
+                else:
+                    for params in model.vfeat_extractor.parameters():
+                        params.requires_grad = False
+            if cfg.model.params.afeat_extractor.is_trainable is False:
+                if dist.is_initialized():
+                    for params in model.module.afeat_extractor.parameters():
+                        params.requires_grad = False
+                else:
+                    for params in model.afeat_extractor.parameters():
+                        params.requires_grad = False
         if cfg.model.params.afeat_extractor.is_trainable is False:
             if dist.is_initialized():
                 model.module.afeat_extractor.eval()
