@@ -221,12 +221,12 @@ def train(cfg):
                 iter_results = dict(
                     logits=[logits.detach().cpu()],
                     targets=[targets['offset_target'].cpu()],
-                    loss_total=loss.item() / len(loaders[phase]) / iter_times,
+                    loss_total=loss.mean().item() / len(loaders[phase]) / iter_times,
                 )
             except:
                 print('Failed!')
                 print('loss is', loss)
-                print('with .item we get', loss.item())
+                print('with .mean().item() we get', loss.mean().item())
                 print('loaders[phase] is', loaders[phase])
                 print('iter_times is', iter_times)
                 exit(0)

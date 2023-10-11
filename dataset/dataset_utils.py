@@ -54,6 +54,7 @@ def maybe_cache_file(path: os.PathLike):
 
 
 def get_video_and_audio(path, get_meta=False, max_clip_len_sec=None, start_sec=None):
+    torchvision.set_video_backend('video_reader')
     path = maybe_cache_file(path)
     # try-except was meant to solve issue when `maybe_cache_file` copies a file but another worker tries to
     # load it because it thinks that the file exists. However, I am not sure if it works :/.
@@ -61,23 +62,34 @@ def get_video_and_audio(path, get_meta=False, max_clip_len_sec=None, start_sec=N
     try:
         if start_sec != None:
             end_sec = start_sec+max_clip_len_sec+2
-            rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec-2, end_pts=end_sec)
+            rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec-2, end_pts=end_sec+1) # grab 10s for 1s buffer
         else:
-            rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', end_pts=max_clip_len_sec)
+            # Added +4 to accommodate +-2s for offset
+            rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', end_pts=max_clip_len_sec+4)
+        # print('got shapes', rgb.shape, audio.shape)
     except KeyError:
         print(f'Problem at {path}. Trying to wait and load again...')
         sleep(5)
         if start_sec != None:
             end_sec = start_sec+max_clip_len_sec+2
-        rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec-2, end_pts=end_sec)
+        rgb, audio, meta = torchvision.io.read_video(path, pts_unit='sec', start_pts=start_sec-2, end_pts=end_sec+1) # grab 10s for 1s buffer
         meta['video_fps']
+    try:
+        assert(audio.shape[0] >= 16000*9) # getting 8.96s instead of 9s consistently
+        assert(rgb.shape[0] >= 25*9)
+        # 5 + 2*2 for 5s clips with 2s buffers on either end to offset within = 9s total should be loaded
+    except:
+        print('Audio shape only', audio.shape[0], 'or', audio.shape[0]/16000, 'seconds for clip at', start_sec, 'in video', path)
+        print('Video shape only', rgb.shape[0], 'or', rgb.shape[0]/25, 'seconds for clip at', start_sec, 'in video', path)
+        print('Requested from', start_sec-2, 'to', end_sec)
+        print('With frame rates', meta)
+        print(path, file=open('failed_paths.txt', 'a'))
+        return None, None, None # To flag for debugging
     # (T, 3, H, W) [0, 255, uint8] <- (T, H, W, 3)
     rgb = rgb.permute(0, 3, 1, 2)
     # (Ta) <- (Ca, Ta)
-    audio = audio.mean(dim=0)
-    if audio.shape[0] < 144000:
-        # print('Audio shape only', audio.shape[0], 'for clip at', start_sec, 'in video', path)
-        return None, None, None # To flag for debugging
+    # audio = audio.mean(dim=0)
+    audio = audio.squeeze()
     # FIXME: this is legacy format of `meta` as it used to be loaded by VideoReader.
     if meta == {}:
         print('video path of failure', path)

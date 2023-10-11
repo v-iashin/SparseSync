@@ -8,6 +8,8 @@ from pathlib import Path
 
 from tqdm import tqdm
 import torch
+import json
+import time
 
 sys.path.insert(0, '.')
 # was dataset.data_utils
@@ -26,7 +28,7 @@ class SportsAndNews(torch.utils.data.Dataset):
                  load_fixed_offsets_on_test=True,
                  vis_load_backend=None, # This doesn't appear to be used anywhere, so can be empty
                  size_ratio=None,
-                 channel='golfshome',
+                 channel=None, # None indicates use all channels
                  distribution_type = 'uniform'):
         super().__init__()
         self.max_clip_len_sec = 5 # VGGSound has None, LRS has 11
@@ -50,14 +52,17 @@ class SportsAndNews(torch.utils.data.Dataset):
             offset_path = f'data/sports_and_news_{distribution_type}.evaluation.json'
             # skip_ids = [line.strip() for line in open(f'data/sports_and_news_{distribution_type}.{split}.skip_id_list.txt')]
             # skip_ids = [line.strip() for line in open('data/sports_and_news_normal.evaluation.skip_id_list.txt')]
+            self.lengths_dict = json.load(open('/saltpool0/data/datasets/avsync/data/v5/evaluation_set_track_lengths.json'))
         elif split == 'train':
-            data_csv = open(f'data/sports_and_news_{distribution_type}.test.csv').readlines() # TODO: switch back to train after running tests
-            offset_path = f'data/sports_and_news_{distribution_type}.test.json' # TODO: switch back to train after running tests
+            data_csv = open(f'data/sports_and_news_{distribution_type}.train.csv').readlines() # TODO: switch back to train after running tests
+            offset_path = f'data/sports_and_news_{distribution_type}.train.json' # TODO: switch back to train after running tests
             # skip_ids = [line.strip() for line in open(f'data/sports_and_news_{distribution_type}.{split}.skip_id_list.txt')]
+            self.lengths_dict = json.load(open('/saltpool0/data/datasets/avsync/data/v5/train_set_track_lengths.json'))
         elif split in ('valid', 'valid-random'):
             data_csv = open(f'data/sports_and_news_{distribution_type}.test.csv').readlines()
             offset_path = f'data/sports_and_news_{distribution_type}.test.json'
             # skip_ids = [line.strip() for line in open(f'data/sports_and_news_{distribution_type}.{split}.skip_id_list.txt')]
+            self.lengths_dict = json.load(open('/saltpool0/data/datasets/avsync/data/v5/test_set_track_lengths.json'))
         else:
             self.dataset = [0]
             return # Not set up yet!
@@ -107,6 +112,10 @@ class SportsAndNews(torch.utils.data.Dataset):
 
         logger.info(f'{split} has {len(self.dataset)} items')
 
+        self.vids_seen = 0
+        self.load_times = []
+        self.transforms_times = []
+        self.too_long_paths = []
         # self.check_lengths()
 
     def check_lengths(self):
@@ -125,11 +134,32 @@ class SportsAndNews(torch.utils.data.Dataset):
 
 
     def __getitem__(self, index):
-        try:
+            # try:
             video_id, path, start = self.dataset[index] 
+            if path in self.too_long_paths:
+                return self[index - 1]
 
+            video_lengths = self.lengths_dict['./'+path[15:]]
+            if (start + self.max_clip_len_sec) > min(video_lengths):
+                # print('Val set item', path, 'with fixed start time', start, 'runs over the end of the tracks at', min(video_lengths))
+                # print('Reseting start time to max possible', int(min(video_lengths) - self.max_clip_len_sec - 2))
+                start = int(min(video_lengths) - self.max_clip_len_sec - 2)
+            elif start <= 10:
+                # Nearly all failures are from the video having only 7-9s of frames when the start time is 10s for some reason
+                start += 5
+            start_load = time.time()
             rgb, audio, meta = get_video_and_audio(path, get_meta=True, max_clip_len_sec=self.max_clip_len_sec, start_sec=start)
-        
+            end_load = time.time()
+            load_time = end_load - start_load
+            if load_time > 5:
+                print(path, 'took', load_time, 'seconds to load')
+                self.too_long_paths.append(path)
+            if rgb == None:
+                # print('get_video_and_audio failed for path', path, 'max_clip_len_sec', self.max_clip_len_sec, 'and start_sec', start, 'so retrieving prior example')
+                return self[index-1]
+    
+            # print('got response with shapes', rgb.shape, audio.shape, 'for path', path)
+
             # (Tv, 3, H, W) in [0, 225], (Ta, C) in [-1, 1]
             item = {
                 'video': rgb,
@@ -141,15 +171,23 @@ class SportsAndNews(torch.utils.data.Dataset):
                 'start':start,
             }
 
+            start_transforms = time.time()
             # loading the fixed offsets. COMMENT THIS IF YOU DON'T HAVE A FILE YET
             if self.load_fixed_offsets_on_test and self.split in ['valid', 'test'] and not self.use_random_offset:
                 item['targets']['offset_sec'] = self.vid2offset_params[video_id]['offset_sec']
-                item['targets']['v_start_i_sec'] = self.vid2offset_params[video_id]['v_start_i_sec']
+                item['targets']['v_start_i_sec'] = self.vid2offset_params[video_id]['v_start_i_sec'] # This doesn't get used I think?
                 if self.transforms is not None:
                     try:
                         item = self.transforms(item) # , skip_start_offset=True)
                     except:
                         print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
+                        print('item is', item)
+                        print('for path', path)
+                        print('video shape is', item['video'].shape)
+                        print('audio shape is', item['audio'].shape)
+                        print('Applying transforms to get an error message, then exiting')
+                        item = self.transforms(item)
+                        exit(0)
                         # with open(f"sports_and_news_{self.distribution_type}.{self.split}.skip_id_list.txt", "a+") as fd:
                         #     if video_id not in set([line.strip for line in fd]):
                         #         fd.write(f"{video_id}\n")
@@ -157,21 +195,41 @@ class SportsAndNews(torch.utils.data.Dataset):
                 
             elif self.split in ('train', 'valid'):
                 item['targets']['offset_sec'] = (random.random()*4)-2 # Random offset every time -> +/- 2 seconds
-                item['targets']['v_start_i_sec'] = (random.random()*296) + 2 # random start time (2,298)
+                # Old start time was (random.random()*296) + 2 to get range(2,298)
+                # New restricts to (2,actual_min_track_length-2)
+                # Also wait a second -- shouldn't we be loading the clip after this? Since we only load 5s? And this selects within the full 300s?
+                item['targets']['v_start_i_sec'] = start # (random.random()*296) + 2 # random start time (2,298)
                 if self.transforms is not None:
                     try:
                         item = self.transforms(item)
                     except:
                         print(f"Failed id: {video_id}\nOffset: {item['targets']['offset_sec']}, Start: {item['targets']['v_start_i_sec']}")
+                        print('item is', item)
+                        print('video shape is', item['video'].shape)
+                        print('audio shape is', item['audio'].shape)
+                        print('Applying transforms to get an error message, then exiting')
+                        item = self.transforms(item)
+                        exit(0)
                         return self[index-1] # Just retrain on previous data
+            end_transforms = time.time()
+            transforms_time = end_transforms - start_transforms
 
             # Decrease sizes
             item['video'] = item['video'].half()
             item['audio'] = item['audio'].half()
+
+            # Dump times
+            self.load_times.append(load_time)
+            self.transforms_times.append(transforms_time)
+            self.vids_seen += 1
+            if self.vids_seen % 500 == 0:
+                json.dump(self.load_times, open('load_times.json', 'w'))
+                json.dump(self.transforms_times, open('transforms_times.json', 'w'))
+
             return item
-        except:
-            print('Failed on video', self.dataset[index][0], 'for a reason other than the transforms')
-            return self[index-1]
+            # except:
+            # print('Failed on video', self.dataset[index][0], 'for a reason other than the transforms')
+            # return self[index-1]
 
     def __len__(self):
         return len(self.dataset)

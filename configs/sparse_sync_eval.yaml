@@ -44,8 +44,8 @@ model:
         embd_pdrop: 0.1
         resid_pdrop: 0.1
         attn_pdrop: 0.1
-        ablate_mixer: True
-        ablate_selector: True
+        ablate_mixer: False
+        ablate_selector: False
         vis_pos_emb_module:
           target: model.modules.transformer.PositionEmbeddingLearnedVisual
           params:
@@ -101,7 +101,7 @@ model:
 
 training:
   base_learning_rate: 5e-5
-  base_batch_size: 16
+  base_batch_size: 64
   num_workers: 8
   num_epochs: 10000
   patience: 140
@@ -111,9 +111,9 @@ training:
   use_half_precision: True
   mixup_alpha: 0.0 # the distribution parameter. Use 0.0 to turn off mixup
   seed: 1337
-  run_test_only: False
+  run_test_only: True
   resume: False
-  finetune: True
+  finetune: False
   detect_anomaly: False
   dist_backend: 'nccl'
   max_clip_norm: 1
@@ -277,11 +277,11 @@ transform_sequence_test:
 
 logging:
   logdir: './logs/sync_models'
-  log_code_state: True
+  log_code_state: False
   # patterns to ignore when backing up the code folder
   patterns_to_ignore: ['logs', '.git', '__pycache__', 'data', '*.pt', 'sbatch_logs', '*.mp4', '*.wav', '*.jpg', '*.gif']
-  use_wandb: True
+  use_wandb: False
 
 resume_scheduler_opt_scaler: False
-ckpt_path: ./logs/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt
-# ckpt_path: ./logs/sync_models/23-05-09T01-14-10/23-05-09T01-14-10.pt
+# ckpt_path: ./logs/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt
+ckpt_path: ./logs/sync_models/23-09-18T11-54-10/23-09-18T11-54-10.pt

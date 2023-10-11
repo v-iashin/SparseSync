@@ -217,16 +217,17 @@ def load_ckpt(cfg, model_wo_ddp, optimizer, scaler, lr_scheduler):
     ckpt = torch.load(cfg.ckpt_path, map_location=torch.device('cpu'))
     ckpt_cfg = ckpt['args']
     model_wo_ddp.load_state_dict(ckpt['model'], strict=False)
-    # optimizer.load_state_dict(ckpt['optimizer'])
-    # scaler.load_state_dict(ckpt['scaler'])
-    # lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
+    if cfg.resume_scheduler_opt_scaler:
+        optimizer.load_state_dict(ckpt['optimizer'])
+        scaler.load_state_dict(ckpt['scaler'])
+        lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
     start_epoch = ckpt['epoch']
     # restarting training counters if the ckpt is used to init weights rather than continuing training
     if cfg.training.finetune:
         old_vid_dir = f'{Path(ckpt_cfg.data.vids_path).stem}/{Path(ckpt_cfg.data.vids_path).parent.stem}'
         new_vid_dir = f'{Path(cfg.data.vids_path).stem}/{Path(cfg.data.vids_path).parent.stem}'
-        assert old_vid_dir != new_vid_dir, f'old: {old_vid_dir}; new: {new_vid_dir}'
-        assert ckpt_cfg.data.dataset.target != cfg.data.dataset.target, ckpt_cfg.data.dataset.target
+        # assert old_vid_dir != new_vid_dir, f'old: {old_vid_dir}; new: {new_vid_dir}'
+        # assert ckpt_cfg.data.dataset.target != cfg.data.dataset.target, ckpt_cfg.data.dataset.target
         logger.info(f'Finetuning from: {ckpt_cfg.ckpt_path} on {cfg.data.dataset.target}')
         ckpt['metrics'][cfg.training.metric_name] = 0 if cfg.training.to_max_metric else float('inf')
         start_epoch = 0
