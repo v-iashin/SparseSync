@@ -18,6 +18,9 @@ FNAME2LINK = {
     'ResNetAudio-22-06-24T17-31-07.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-06-24T17-31-07.pt',  # 6s
     'ResNetAudio-22-06-24T23-57-11.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-06-24T23-57-11.pt',  # 7s
     'ResNetAudio-22-06-25T04-35-42.pt': f'{PARENT_LINK}/sync/ResNetAudio-22-06-25T04-35-42.pt',  # 8s
+    # ft AudioSet
+    '23-02-26T22-31-22.pt': f'{PARENT_LINK}/sync/sync_models/23-02-26T22-31-22/23-02-26T22-31-22.pt',
+    'cfg-23-02-26T22-31-22.yaml': f'{PARENT_LINK}/sync/sync_models/23-02-26T22-31-22/cfg-23-02-26T22-31-22.yaml',
     # ft VGGSound-Full
     '22-09-21T21-00-52.pt': f'{PARENT_LINK}/sync/sync_models/22-09-21T21-00-52/22-09-21T21-00-52.pt',
     'cfg-22-09-21T21-00-52.yaml': f'{PARENT_LINK}/sync/sync_models/22-09-21T21-00-52/cfg-22-09-21T21-00-52.yaml',

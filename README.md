@@ -1,10 +1,18 @@
 # Audio-visual Synchronisation with Trainable Selectors
 
-This is the official implementation of
-
 [Iashin, V., Xie, W., Rahtu, E. and Zisserman, A. "Sparse in Space and Time: Audio-visual Synchronisation with Trainable Selectors"](https://arxiv.org/abs/2210.07055)
 
-BMVC 2022 (Spotlight Presentation)
+Our paper is accepted for a spotlight presentation at the BMVC 2022.
+Please, use this BibTeX if you would like to cite our work:
+
+```bibtex
+@InProceedings{sparse2022iashin,
+  title={Sparse in Space and Time: Audio-visual Synchronisation with Trainable Selectors},
+  author={Iashin, V., Xie, W., Rahtu, E. and Zisserman, A.},
+  booktitle={British Machine Vision Conference (BMVC)},
+  year={2022}
+}
+```
 
 • [[Project Page](https://v-iashin.github.io/SparseSync)]
 • [[ArXiv](https://arxiv.org/abs/2210.07055)]
@@ -13,6 +21,7 @@ BMVC 2022 (Spotlight Presentation)
 • [[Presentation (spotlight)](https://www.youtube.com/watch?v=DKNNQ54zkIw)] •
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rawAPksDHUioSXcAbQTn_kMbDl3nYg8q?usp=sharing)
+
 
 <img src="https://v-iashin.github.io/images/sparsesync/sparse_selector_teaser.png" alt="SparseSync Teaser (comparing viddeos with dense and sparse signals)" width="900">
 
@@ -32,6 +41,7 @@ of long videos in linear complexity with respect to the number of input tokens w
 rapidly with sampling rate, resolution, and video duration.
 
 - [Audio-visual Synchronisation with Trainable Selectors](#audio-visual-synchronisation-with-trainable-selectors)
+  - [Updates](#updates)
   - [Environment Preparation](#environment-preparation)
     - [Conda](#conda)
     - [Docker](#docker)
@@ -47,9 +57,11 @@ rapidly with sampling rate, resolution, and video duration.
     - [Train Audio Feature Extractor](#train-audio-feature-extractor)
   - [Evaluation](#evaluation)
   - [Examples](#examples)
-  - [Citation](#citation)
   - [LICENSE](#license)
   - [Acknowledgements](#acknowledgements)
+
+## Updates
+* Added a model trained on AudioSet (see [pre-trained checkpoints](#pre-trained-model-checkpoints))
 
 ## Environment Preparation
 During experimentation, we used Linux machines with `conda` virtual environments, PyTorch 1.11 and CUDA 11.3.
@@ -223,6 +235,7 @@ The model is evaluated on the test set of LRS3 ('No Face Crop').
 | LRS3 (‘No Face Crop’) | VGGSound-Sparse | 3 | 60.3      | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-08-13T21-55-03/cfg-22-08-13T21-55-03.yaml) | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-08-13T21-55-03/22-08-13T21-55-03.pt) (md5: `08bb68a...`)   |
 | LRS3 (‘No Face Crop’) | VGGSound-Sparse | 21 | 44.3     | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-28T15-49-45/cfg-22-07-28T15-49-45.yaml) | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-07-28T15-49-45/22-07-28T15-49-45.pt) (md5: `a26f207...`)   |
 | LRS3 (‘No Face Crop’) | VGGSound        | 21 | 51.2     | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/cfg-22-09-21T21-00-52.yaml) | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/22-09-21T21-00-52/22-09-21T21-00-52.pt) (md5:  `83fba5f...` ) |
+| LRS3 (‘No Face Crop’) | AudioSet        | 21 | 56.7     | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/23-02-26T22-31-22/cfg-23-02-26T22-31-22.yaml) | [link](https://a3s.fi/swift/v1/AUTH_a235c0f452d648828f745589cde1219a/sync/sync_models/23-02-26T22-31-22/23-02-26T22-31-22.pt) (md5:  `d3c40b4...` ) |
 
 The models are evaluated on the test set of VGGSound-Sparse.
 3 offset classes: [-1, 0, +1], 21 offset classes: [-2.0, -1.8, ..., 0.0, ..., 1.8, 2.0].
@@ -339,7 +352,7 @@ However, if you would like to do it manually, here is the code chunk:
 # which experiment to resume from `./logs/sync_models/xx-xx-xxTxx-xx-xx`
 CKPT_ID="xx-xx-xxTxx-xx-xx"
 
-srun python main.py \
+python main.py \
     config="./logs/sync_models/$CKPT_ID/cfg-$CKPT_ID.yaml" \
     logging.log_code_state="False" \
     training.finetune="False" \
@@ -413,18 +426,6 @@ python ./scripts/example.py \
   --offset_sec 1.6
 # Prediction Results:
 # p=0.8652 (8.4451), "1.60" (18)
-```
-
-## Citation
-Our paper was accepted for a spotlight presentation at the BMVC 2022.
-Please, use this BibTeX if you would like to cite our work:
-```bibtex
-@InProceedings{sparse2022iashin,
-  title={Sparse in Space and Time: Audio-visual Synchronisation with Trainable Selectors},
-  author={Iashin, V., Xie, W., Rahtu, E. and Zisserman, A.},
-  booktitle={British Machine Vision Conference (BMVC)},
-  year={2022}
-}
 ```
 
 ## LICENSE
