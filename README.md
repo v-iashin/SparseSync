@@ -349,7 +349,6 @@ After stopping the training, the model will do a probe on the test set.
 
 However, if you would like to do it manually, here is the code chunk:
 ```bash
-# which experiment to resume from `./logs/sync_models/xx-xx-xxTxx-xx-xx`
 CKPT_ID="xx-xx-xxTxx-xx-xx"
 
 python main.py \
