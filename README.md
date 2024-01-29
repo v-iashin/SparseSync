@@ -61,6 +61,7 @@ rapidly with sampling rate, resolution, and video duration.
   - [Acknowledgements](#acknowledgements)
 
 ## Updates
+* See our newest synchronisation model called [Synchformer](https://www.robots.ox.ac.uk/~vgg/research/synchformer/) which significantly outperforms SparseSync.
 * Added a model trained on AudioSet (see [pre-trained checkpoints](#pre-trained-model-checkpoints))
 
 ## Environment Preparation
